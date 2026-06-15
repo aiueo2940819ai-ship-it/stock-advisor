@@ -1,6 +1,13 @@
 {
-  "cash_jpy": 500000,
+  "cash_jpy": 491489,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
-  "holdings": []
+  "holdings": [
+    {
+      "code": "8306",
+      "name": "三菱UFJフィナンシャル",
+      "shares": 20,
+      "buy_price": 2865
+    }
+  ]
 }
