@@ -6,6 +6,9 @@ on:
     - cron: '30 6 * * 1-5'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   evening-summary:
     runs-on: ubuntu-latest
@@ -27,3 +30,12 @@ jobs:
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
           GMAIL_ADDRESS:      ${{ secrets.GMAIL_ADDRESS }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+
+      - name: 使用状況をコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase
+          git add data/usage.json || true
+          git diff --staged --quiet || git commit -m "chore: 使用状況更新 $(date +%Y-%m-%d)"
+          git push

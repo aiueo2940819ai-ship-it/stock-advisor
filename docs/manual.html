@@ -90,6 +90,24 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
 .email-subject { font-weight: 700; color: #1a1a2e; margin-bottom: 10px; padding-bottom: 8px;
   border-bottom: 1px solid #e0e0e0; }
 .email-body { white-space: pre-line; color: #444; line-height: 1.8; }
+
+/* 使用状況ダッシュボード */
+.usage-header { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.usage-card { background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; }
+.usage-card-val { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+.usage-card-label { font-size: 11px; color: #888; margin-top: 2px; }
+.usage-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.usage-table th { background: #f0f2f5; padding: 8px 6px; text-align: left; color: #555; font-weight: 600; }
+.usage-table td { padding: 8px 6px; border-bottom: 1px solid #f0f2f5; color: #444; }
+.usage-table tr:last-child td { border-bottom: none; }
+.badge-morning { background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+.badge-evening { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+.badge-rotation { background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+.load-btn { display: block; width: 100%; padding: 10px; background: #1a1a2e; color: white;
+  border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 14px; }
+.load-btn:hover { background: #2d2d4e; }
+#usage-loading { text-align: center; color: #888; font-size: 13px; padding: 20px; }
+#usage-error   { color: #d32f2f; font-size: 13px; padding: 10px; background: #fff3f3; border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -357,7 +375,15 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </div>
   </div>
 
-  <!-- 9. 重要URL -->
+  <!-- 9. API使用状況 -->
+  <div class="section">
+    <div class="section-title">💰 API使用状況ダッシュボード</div>
+    <p style="font-size:13px;color:#666;margin-bottom:12px">Claude APIのトークン使用量とコストを確認できます。ポートフォリオページでトークンを設定済みの場合は自動読み込みします。</p>
+    <button class="load-btn" onclick="loadUsage()">📊 使用状況を読み込む</button>
+    <div id="usage-content"></div>
+  </div>
+
+  <!-- 10. 重要URL -->
   <div class="section">
     <div class="section-title">🔗 重要なリンク</div>
     <ul class="file-list">
@@ -381,5 +407,109 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
   </div>
 
 </div>
+
+<script>
+const OWNER = 'aiueo2940819ai-ship-it';
+const REPO  = 'stock-advisor';
+
+function getToken() { return localStorage.getItem('gh_pat') || ''; }
+
+async function loadUsage() {
+  const el = document.getElementById('usage-content');
+  el.innerHTML = '<div id="usage-loading">読み込み中...</div>';
+
+  const token = getToken();
+  if (!token) {
+    el.innerHTML = '<div id="usage-error">⚠️ トークン未設定です。<a href="index.html">ポートフォリオページ</a>でGitHub Personal Access Tokenを設定してください。</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/usage.json`,
+      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) {
+      if (res.status === 404) {
+        el.innerHTML = '<div id="usage-error">ℹ️ まだ使用データがありません。初回の朝/夕方分析実行後に記録が作成されます。</div>';
+      } else {
+        el.innerHTML = `<div id="usage-error">エラー: ${res.status} ${res.statusText}</div>`;
+      }
+      return;
+    }
+    const json = await res.json();
+    const data = JSON.parse(atob(json.content));
+    renderUsage(data);
+  } catch(e) {
+    el.innerHTML = `<div id="usage-error">読み込み失敗: ${e.message}</div>`;
+  }
+}
+
+function renderUsage(records) {
+  const el = document.getElementById('usage-content');
+  if (!records || records.length === 0) {
+    el.innerHTML = '<div id="usage-error">ℹ️ まだ使用データがありません。</div>';
+    return;
+  }
+
+  // 今月の集計
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthRecords = records.filter(r => r.date && r.date.startsWith(thisMonth));
+  const totalUSD  = monthRecords.reduce((s, r) => s + (r.cost_usd || 0), 0);
+  const totalJPY  = Math.round(totalUSD * 150);
+  const totalIn   = monthRecords.reduce((s, r) => s + (r.input_tokens  || 0), 0);
+  const totalOut  = monthRecords.reduce((s, r) => s + (r.output_tokens || 0), 0);
+
+  // バッジHTMLを返す
+  function badge(task) {
+    const cls = task === 'morning' ? 'badge-morning' : task === 'evening' ? 'badge-evening' : 'badge-rotation';
+    const labels = { morning: '朝の分析', evening: '夕方サマリー', rotation: '月次ローテーション' };
+    return `<span class="${cls}">${labels[task] || task}</span>`;
+  }
+
+  // 最新30件（新しい順）の行を作る
+  const rows = [...records].reverse().slice(0, 30).map(r => {
+    const jpy = Math.round((r.cost_usd || 0) * 150);
+    const model = r.model && r.model.includes('haiku') ? 'Haiku' : 'Sonnet';
+    return `<tr>
+      <td>${r.date || ''} ${(r.time||'').slice(0,5)}</td>
+      <td>${badge(r.task)}</td>
+      <td>${model}</td>
+      <td style="text-align:right">${((r.input_tokens||0)+(r.output_tokens||0)).toLocaleString()}</td>
+      <td style="text-align:right">¥${jpy}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="usage-header">
+      <div class="usage-card">
+        <div class="usage-card-val">¥${totalJPY.toLocaleString()}</div>
+        <div class="usage-card-label">今月の合計コスト</div>
+      </div>
+      <div class="usage-card">
+        <div class="usage-card-val">${monthRecords.length}回</div>
+        <div class="usage-card-label">今月の実行回数</div>
+      </div>
+      <div class="usage-card">
+        <div class="usage-card-val">${((totalIn+totalOut)/1000).toFixed(1)}K</div>
+        <div class="usage-card-label">今月のトークン数</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="usage-table">
+        <thead><tr>
+          <th>日時</th><th>タスク</th><th>モデル</th><th style="text-align:right">トークン</th><th style="text-align:right">コスト</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-top:8px;text-align:right">※ 1USD=150円換算 / 最新30件表示</p>
+  `;
+}
+
+// ページ読み込み時にトークンがあれば自動ロード
+window.addEventListener('load', () => { if (getToken()) loadUsage(); });
+</script>
 </body>
 </html>

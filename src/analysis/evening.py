@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 import anthropic
 from config import ANTHROPIC_API_KEY, CLAUDE_MODEL_FAST as CLAUDE_MODEL
+from src.utils.usage_tracker import log_usage
 
 _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -87,4 +88,5 @@ def analyze_evening(
         max_tokens=800,
         messages=[{"role": "user", "content": prompt}],
     )
+    log_usage("evening", CLAUDE_MODEL, message.usage.input_tokens, message.usage.output_tokens)
     return message.content[0].text

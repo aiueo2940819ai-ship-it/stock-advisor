@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 import anthropic
 from config import ANTHROPIC_API_KEY, CLAUDE_MODEL_SMART as CLAUDE_MODEL
+from src.utils.usage_tracker import log_usage
 
 _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -214,6 +215,7 @@ def analyze_daily(
         max_tokens=3000,
         messages=[{"role": "user", "content": prompt}],
     )
+    log_usage("morning", CLAUDE_MODEL, message.usage.input_tokens, message.usage.output_tokens)
     text       = message.content[0].text
     structured = _parse_structured(text)
 
