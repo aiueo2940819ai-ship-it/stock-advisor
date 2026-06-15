@@ -23,9 +23,10 @@ def main():
         data["buy_price"] = h.get("buy_price", 0)
         data["shares"]    = h.get("shares", 0)
         holding_data.append(data)
-        current = data.get("latest", "エラー")
+        current = data.get("latest")
         ed      = data.get("earnings_date", "不明")
-        print(f"  {h['code']} {h.get('name','')}: {current}円 | 決算: {ed}")
+        cur_str = f"{current:,.0f}円" if current else "取得失敗"
+        print(f"  {h['code']} {h.get('name','')}: {cur_str} | 決算: {ed}")
 
     # ウォッチリストから上位10銘柄（RSIが良いもの）を取得
     watch_list = portfolio.get("watch_list", [])
@@ -37,7 +38,9 @@ def main():
         data["sector"] = s.get("sector", "")
         watch_data.append(data)
         if "error" not in data:
-            print(f"  {s['code']} {s['name']}: {data['latest']}円")
+            latest = data.get("latest")
+            lat_str = f"{latest:,.0f}円" if latest else "N/A"
+            print(f"  {s['code']} {s['name']}: {lat_str}")
 
     print("\nClaude分析中...")
     analysis = analyze_evening(holding_data, watch_data, macro_data, portfolio)
