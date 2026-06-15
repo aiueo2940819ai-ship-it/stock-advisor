@@ -16,4 +16,4 @@ MACRO_INDICATORS = {
     "^SOX":     "SOX半導体指数",
 }
 
-HISTORY_KEEP_DAYS = 7
+HISTORY_KEEP_DAYS = 30

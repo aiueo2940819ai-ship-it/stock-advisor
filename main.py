@@ -55,7 +55,9 @@ def main():
 
     # ⑤ 履歴読み込み → 日次Claude分析
     print("\n[4/6] 過去履歴読み込み中...")
-    history = load_history(days=7)
+    is_monday = datetime.now().weekday() == 0
+    history_days = 14 if is_monday else 7   # 月曜は2週間・平日は1週間
+    history = load_history(days=history_days)
     print(f"  {len(history)}日分の履歴を取得")
 
     print("\n[5/6] Claude分析中...")
@@ -81,6 +83,8 @@ def main():
 
     # ⑦ 月次ローテーション（毎月第1営業日のみ）
     if is_first_business_day():
+        history_30d = load_history(days=30)
+        print(f"\n[月次] 過去30日履歴: {len(history_30d)}日分")
         print("\n[月次] ウォッチリスト入れ替え分析中...")
         universe      = load_universe()
         universe_codes = {s["code"] for s in universe}
@@ -99,7 +103,7 @@ def main():
             universe_data.append(d)
 
         rotation_text = analyze_rotation(
-            universe_data, watch_list, macro_data, portfolio
+            universe_data, watch_list, macro_data, portfolio, history_30d
         )
         rotation_subject = (
             f"【月次ローテーション】{datetime.now().strftime('%Y年%m月')} "

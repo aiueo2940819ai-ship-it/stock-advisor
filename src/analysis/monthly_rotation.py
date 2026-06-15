@@ -29,6 +29,7 @@ def analyze_rotation(
     current_watchlist: list[dict],
     macro_data: list[dict],
     portfolio: dict,
+    history: list[dict] | None = None,
 ) -> str:
     current_codes  = {s["code"] for s in current_watchlist}
     universe_str   = json.dumps(universe_data,    ensure_ascii=False, indent=2)
@@ -36,8 +37,19 @@ def analyze_rotation(
     current_str    = json.dumps(current_watchlist, ensure_ascii=False, indent=2)
     month_label    = datetime.now().strftime("%Y年%m月")
 
+    # 過去30日の推奨履歴サマリー（月次専用）
+    history_summary = ""
+    if history:
+        lines = ["\n## 過去30日間の推奨履歴サマリー"]
+        for h in history[-20:]:   # 最大20日分に絞る
+            buy   = ", ".join(h.get("buy_codes",  [])) or "なし"
+            sell  = ", ".join(h.get("sell_codes", [])) or "なし"
+            lines.append(f"- {h['date']}: 買い={buy} / 売り={sell} / {h.get('summary','')}")
+        history_summary = "\n".join(lines)
+
     prompt = f"""あなたは10年以上の経験を持つ日本株スウィングトレードの専門家です。
 今日は{month_label}の第1営業日です。今月のウォッチリスト入れ替えを提案してください。
+{history_summary}
 
 ## 前提
 - 投資スタイル: 1週間〜1ヶ月のスウィングトレード
