@@ -166,6 +166,7 @@ def _build_prompt(
 （現ポートフォリオで注意すべき点1-2点）
 
 ---
+※ 以下のJSONブロックは必ず出力の最後に含めてください。フォーマットを厳守してください。
 [STRUCTURED_DATA]
 {{
   "market_condition": "risk-on または risk-neutral または risk-off",
