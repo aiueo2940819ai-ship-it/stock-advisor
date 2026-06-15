@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ポートフォリオ管理</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #333; }
+.container { max-width: 560px; margin: 0 auto; padding: 16px 12px 80px; }
+
+h1 { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+h2 { font-size: 14px; font-weight: 600; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; font-weight: 500; }
+input[type=text], input[type=number], input[type=password] {
+  width: 100%; padding: 11px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+  font-size: 15px; background: #fafafa; transition: border-color 0.2s;
+}
+input:focus { outline: none; border-color: #4CAF50; background: white; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field { margin-bottom: 10px; }
+
+.btn { display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 13px; border: none; border-radius: 12px; font-size: 15px;
+  font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.btn:active { opacity: 0.8; }
+.btn-green  { background: #4CAF50; color: white; }
+.btn-blue   { background: #2196F3; color: white; margin-bottom: 10px; }
+.btn-red    { background: transparent; border: 1px solid #f44336; color: #f44336;
+  padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; width: auto; display: inline-flex; }
+
+.total-box { text-align: center; padding: 8px 0; }
+.total-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+.total-value { font-size: 28px; font-weight: 700; color: #4CAF50; }
+
+.holding-card { background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.holding-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.holding-title { font-size: 13px; font-weight: 600; color: #444; }
+
+.token-card { background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+.token-card h2 { color: #f57f17; }
+.token-hint { font-size: 11px; color: #888; margin-top: 6px; line-height: 1.5; }
+
+.status { padding: 12px; border-radius: 10px; text-align: center; font-size: 14px; margin-top: 10px; display: none; }
+.status.ok  { background: #e8f5e9; color: #2e7d32; display: block; }
+.status.err { background: #ffebee; color: #c62828; display: block; }
+
+.spinner { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+
+.logout { font-size: 11px; color: #bbb; text-align: right; cursor: pointer; margin-bottom: 8px; }
+.logout:hover { color: #888; }
+
+.pnl { font-size: 12px; margin-top: 2px; }
+.pnl.plus { color: #4CAF50; }
+.pnl.minus { color: #f44336; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 ポートフォリオ管理</h1>
+
+  <!-- トークン入力 -->
+  <div class="token-card" id="tokenCard">
+    <h2>🔑 初回設定</h2>
+    <div class="field">
+      <label>GitHub Personal Access Token</label>
+      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+    </div>
+    <button class="btn btn-green" onclick="saveToken()">この端末に保存して開始</button>
+    <p class="token-hint">
+      ※ トークンはこのブラウザにのみ保存されます。<br>
+      取得方法: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained → Contents の Read &amp; Write 権限
+    </p>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div id="mainContent" style="display:none">
+    <div class="logout" onclick="logout()">別のトークンに切り替える</div>
+
+    <!-- 総資産 -->
+    <div class="card">
+      <div class="total-box">
+        <div class="total-label">推定総資産</div>
+        <div class="total-value" id="totalAsset">―</div>
+      </div>
+    </div>
+
+    <!-- 現金 -->
+    <div class="card">
+      <h2>💴 現金残高</h2>
+      <div class="field">
+        <label>現金（円）</label>
+        <input type="number" id="cashJpy" placeholder="500000" oninput="updateTotal()">
+      </div>
+    </div>
+
+    <!-- 保有銘柄 -->
+    <div class="card">
+      <h2>📈 保有銘柄</h2>
+      <div id="holdingsList"></div>
+      <button class="btn btn-blue" onclick="addHolding()">＋ 銘柄を追加</button>
+    </div>
+
+    <!-- リスク設定 -->
+    <div class="card">
+      <h2>⚙️ リスク設定</h2>
+      <div class="grid2">
+        <div class="field">
+          <label>1銘柄上限（%）</label>
+          <input type="number" id="maxRatio" placeholder="15">
+        </div>
+        <div class="field">
+          <label>損切りライン（%）</label>
+          <input type="number" id="stopLoss" placeholder="-8">
+        </div>
+      </div>
+    </div>
+
+    <!-- 保存 -->
+    <button class="btn btn-green" onclick="savePortfolio()">💾 保存する</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="spinner" id="spinner" style="display:none">読み込み中...</div>
+</div>
+
+<script>
+const OWNER = 'aiueo2940819ai-ship-it';
+const REPO  = 'stock-advisor';
+const FILE  = 'data/portfolio.json';
+const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+
+let fileSha = null;
+let holdingIdx = 0;
+
+function getToken() { return localStorage.getItem('gh_pat') || ''; }
+
+function saveToken() {
+  const t = document.getElementById('tokenInput').value.trim();
+  if (!t.startsWith('ghp_') && !t.startsWith('github_pat_')) {
+    alert('トークンの形式が正しくありません（ghp_ または github_pat_ で始まる文字列）');
+    return;
+  }
+  localStorage.setItem('gh_pat', t);
+  init();
+}
+
+function logout() {
+  localStorage.removeItem('gh_pat');
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('tokenCard').style.display = 'block';
+}
+
+async function init() {
+  const token = getToken();
+  if (!token) { document.getElementById('tokenCard').style.display = 'block'; return; }
+
+  document.getElementById('tokenCard').style.display = 'none';
+  document.getElementById('spinner').style.display = 'block';
+
+  try {
+    const res  = await fetch(API, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'API エラー');
+
+    fileSha = data.sha;
+    const portfolio = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
+    renderForm(portfolio);
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  } catch (e) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('tokenCard').style.display = 'block';
+    alert('読み込み失敗: ' + e.message + '\nトークンの権限（Contents Read/Write）を確認してください');
+  }
+}
+
+function renderForm(p) {
+  document.getElementById('cashJpy').value  = p.cash_jpy || 0;
+  document.getElementById('maxRatio').value = Math.round((p.max_single_stock_ratio || 0.15) * 100);
+  document.getElementById('stopLoss').value = Math.round((p.stop_loss_ratio || -0.08) * 100);
+  document.getElementById('holdingsList').innerHTML = '';
+  holdingIdx = 0;
+  (p.holdings || []).forEach(h => addHoldingRow(h));
+  updateTotal();
+}
+
+function addHolding() { addHoldingRow({}); updateTotal(); }
+
+function addHoldingRow(h) {
+  const i   = holdingIdx++;
+  const div = document.createElement('div');
+  div.className = 'holding-card';
+  div.id = `hcard_${i}`;
+  div.innerHTML = `
+    <div class="holding-header">
+      <span class="holding-title" id="htitle_${i}">${h.name || '新しい銘柄'}</span>
+      <button class="btn-red" onclick="removeHolding(${i})">削除</button>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>銘柄コード</label>
+        <input type="text" id="hcode_${i}" value="${h.code||''}" placeholder="8306" oninput="updateTitle(${i}); updateTotal()">
+      </div>
+      <div class="field">
+        <label>銘柄名</label>
+        <input type="text" id="hname_${i}" value="${h.name||''}" placeholder="三菱UFJ" oninput="updateTitle(${i})">
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>保有株数</label>
+        <input type="number" id="hshares_${i}" value="${h.shares||''}" placeholder="100" oninput="updateTotal()">
+      </div>
+      <div class="field">
+        <label>平均購入単価（円）</label>
+        <input type="number" id="hprice_${i}" value="${h.buy_price||''}" placeholder="2865" oninput="updateTotal()">
+      </div>
+    </div>`;
+  document.getElementById('holdingsList').appendChild(div);
+}
+
+function updateTitle(i) {
+  const name = document.getElementById(`hname_${i}`)?.value;
+  const code = document.getElementById(`hcode_${i}`)?.value;
+  const el   = document.getElementById(`htitle_${i}`);
+  if (el) el.textContent = name || code || '新しい銘柄';
+}
+
+function removeHolding(i) {
+  document.getElementById(`hcard_${i}`)?.remove();
+  updateTotal();
+}
+
+function updateTotal() {
+  const cash = parseFloat(document.getElementById('cashJpy').value) || 0;
+  let   val  = 0;
+  for (let i = 0; i < holdingIdx; i++) {
+    const card = document.getElementById(`hcard_${i}`);
+    if (!card) continue;
+    const s = parseFloat(document.getElementById(`hshares_${i}`)?.value) || 0;
+    const p = parseFloat(document.getElementById(`hprice_${i}`)?.value) || 0;
+    val += s * p;
+  }
+  document.getElementById('totalAsset').textContent = (cash + val).toLocaleString('ja-JP') + ' 円';
+}
+
+function collectPortfolio() {
+  const holdings = [];
+  for (let i = 0; i < holdingIdx; i++) {
+    const card = document.getElementById(`hcard_${i}`);
+    if (!card) continue;
+    const code = document.getElementById(`hcode_${i}`)?.value.trim();
+    if (!code) continue;
+    holdings.push({
+      code,
+      name:      document.getElementById(`hname_${i}`)?.value.trim() || code,
+      shares:    parseFloat(document.getElementById(`hshares_${i}`)?.value) || 0,
+      buy_price: parseFloat(document.getElementById(`hprice_${i}`)?.value) || 0,
+    });
+  }
+  return {
+    cash_jpy:               parseFloat(document.getElementById('cashJpy').value) || 0,
+    max_single_stock_ratio: (parseFloat(document.getElementById('maxRatio').value) || 15) / 100,
+    stop_loss_ratio:        (parseFloat(document.getElementById('stopLoss').value) || -8) / 100,
+    holdings,
+  };
+}
+
+async function savePortfolio() {
+  const token = getToken();
+  if (!token) return alert('トークンが見つかりません');
+
+  const portfolio = collectPortfolio();
+  const json      = JSON.stringify(portfolio, null, 2) + '\n';
+  const content   = btoa(unescape(encodeURIComponent(json)));
+  const body      = {
+    message: `ポートフォリオ更新 ${new Date().toLocaleDateString('ja-JP')}`,
+    content,
+    sha: fileSha,
+  };
+
+  const st = document.getElementById('status');
+  st.className = 'status'; st.textContent = '保存中...'; st.style.display = 'block';
+
+  try {
+    const res  = await fetch(API, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Accept: 'application/vnd.github+json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || '保存失敗');
+
+    fileSha = data.content.sha;
+    st.className = 'status ok';
+    st.textContent = '✅ 保存完了！明朝のメールに反映されます。';
+  } catch (e) {
+    st.className = 'status err';
+    st.textContent = '❌ 保存失敗: ' + e.message;
+  }
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
