@@ -1,0 +1,29 @@
+name: 夕方サマリー
+
+on:
+  schedule:
+    # 月〜金の15:30 JST（= 日〜木 06:30 UTC）に実行
+    - cron: '30 6 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  evening-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: コードチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: ライブラリインストール
+        run: pip install -r requirements.txt
+
+      - name: 夕方サマリー実行
+        run: python main_evening.py
+        env:
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_ADDRESS:      ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
