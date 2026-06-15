@@ -9,7 +9,18 @@
       "PowerShell(git config --global user.email)",
       "PowerShell(git init)",
       "PowerShell(git add .)",
-      "PowerShell(git commit -m \"�����Z�b�g�A�b�v\")"
+      "PowerShell(git commit -m \"�����Z�b�g�A�b�v\")",
+      "PowerShell(git remote add origin https://github.com/aiueo2940819ai-ship-it/stock-advisor.git)",
+      "PowerShell(git branch -M main)",
+      "PowerShell(git push -u origin main 2>&1)",
+      "PowerShell(git add data/watchlist.json data/portfolio.json)",
+      "PowerShell(git commit -m \"�������X�g��25�����ɐ����E�|�[�g�t�H���I�����ݒ�\")",
+      "PowerShell(git push origin main 2>&1)",
+      "PowerShell(git pull origin main --rebase 2>&1)",
+      "PowerShell(git stash)",
+      "PowerShell(git pull origin main 2>&1)",
+      "PowerShell(git stash pop)",
+      "PowerShell(New-Item -ItemType Directory -Force \"docs\")"
     ]
   }
 }

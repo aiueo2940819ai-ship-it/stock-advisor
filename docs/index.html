@@ -52,6 +52,11 @@ input:focus { outline: none; border-color: #4CAF50; background: white; }
 
 .spinner { text-align: center; padding: 40px; color: #999; font-size: 14px; }
 
+.nav { display: flex; gap: 8px; margin-bottom: 20px; }
+.nav a { flex: 1; text-align: center; padding: 10px; background: white; border-radius: 10px;
+  text-decoration: none; color: #555; font-size: 13px; font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.nav a.active { background: #1a1a2e; color: white; }
 .logout { font-size: 11px; color: #bbb; text-align: right; cursor: pointer; margin-bottom: 8px; }
 .logout:hover { color: #888; }
 
@@ -62,6 +67,10 @@ input:focus { outline: none; border-color: #4CAF50; background: white; }
 </head>
 <body>
 <div class="container">
+  <div class="nav">
+    <a href="index.html" class="active">📊 ポートフォリオ</a>
+    <a href="manual.html">📖 説明書</a>
+  </div>
   <h1>📊 ポートフォリオ管理</h1>
 
   <!-- トークン入力 -->

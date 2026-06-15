@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>説明書 - AI投資判断ボット</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #333; line-height: 1.7; }
+.container { max-width: 680px; margin: 0 auto; padding: 16px 14px 80px; }
+
+/* ナビ */
+.nav { display: flex; gap: 8px; margin-bottom: 20px; }
+.nav a { flex: 1; text-align: center; padding: 10px; background: white; border-radius: 10px;
+  text-decoration: none; color: #555; font-size: 13px; font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.nav a.active { background: #1a1a2e; color: white; }
+
+h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+.subtitle { font-size: 13px; color: #888; margin-bottom: 24px; }
+
+/* セクション */
+.section { background: white; border-radius: 16px; padding: 20px; margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px; padding-bottom: 10px;
+  border-bottom: 2px solid #f0f2f5; }
+
+p { font-size: 14px; color: #444; margin-bottom: 10px; }
+p:last-child { margin-bottom: 0; }
+
+/* ステップ */
+.steps { counter-reset: step; }
+.step { display: flex; gap: 12px; margin-bottom: 14px; }
+.step:last-child { margin-bottom: 0; }
+.step-num { flex-shrink: 0; width: 28px; height: 28px; background: #1a1a2e; color: white;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; margin-top: 1px; }
+.step-body { flex: 1; }
+.step-title { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 4px; }
+.step-desc { font-size: 13px; color: #666; }
+
+/* ファイル一覧 */
+.file-list { list-style: none; }
+.file-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f2f5; }
+.file-item:last-child { border-bottom: none; }
+.file-name { font-family: monospace; font-size: 13px; color: #2196F3; font-weight: 600;
+  min-width: 180px; flex-shrink: 0; }
+.file-desc { font-size: 13px; color: #666; }
+
+/* タグ */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px;
+  font-weight: 600; margin-left: 6px; }
+.tag-auto { background: #e8f5e9; color: #2e7d32; }
+.tag-manual { background: #e3f2fd; color: #1565c0; }
+.tag-alert { background: #fff3e0; color: #e65100; }
+
+/* タイムライン */
+.timeline { }
+.tl-item { display: flex; gap: 14px; margin-bottom: 16px; }
+.tl-item:last-child { margin-bottom: 0; }
+.tl-time { flex-shrink: 0; font-size: 13px; font-weight: 700; color: #1a1a2e;
+  min-width: 60px; padding-top: 1px; }
+.tl-content { flex: 1; }
+.tl-title { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 3px; }
+.tl-desc  { font-size: 13px; color: #666; }
+
+/* コード */
+code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-radius: 4px;
+  font-size: 13px; color: #d32f2f; }
+.code-block { background: #1a1a2e; color: #a5d6a7; font-family: monospace; font-size: 13px;
+  padding: 14px; border-radius: 10px; margin: 10px 0; line-height: 1.6; overflow-x: auto; }
+
+/* 注意 */
+.note { background: #fff8e1; border-left: 4px solid #ffc107; padding: 12px 14px;
+  border-radius: 0 8px 8px 0; font-size: 13px; color: #555; margin: 10px 0; }
+.note strong { color: #e65100; }
+
+/* Q&A */
+.qa { margin-bottom: 14px; }
+.qa:last-child { margin-bottom: 0; }
+.q { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+.q::before { content: "Q. "; color: #4CAF50; }
+.a { font-size: 13px; color: #555; padding-left: 18px; }
+.a::before { content: "A. "; font-weight: 600; color: #666; margin-left: -18px; }
+
+/* メールサンプル */
+.email-sample { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 10px;
+  padding: 14px; font-size: 13px; color: #333; }
+.email-subject { font-weight: 700; color: #1a1a2e; margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0; }
+.email-body { white-space: pre-line; color: #444; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ナビ -->
+  <div class="nav">
+    <a href="index.html">📊 ポートフォリオ</a>
+    <a href="manual.html" class="active">📖 説明書</a>
+  </div>
+
+  <h1>📖 AI投資判断ボット 説明書</h1>
+  <p class="subtitle">スウィングトレード（1週間〜1ヶ月）向け・自動分析システム</p>
+
+  <!-- 1. システム概要 -->
+  <div class="section">
+    <div class="section-title">🗺️ システム全体像</div>
+    <p>毎朝7時、AIが以下を自動で実行してメールで届けます。</p>
+    <div class="timeline" style="margin-top:14px">
+      <div class="tl-item">
+        <div class="tl-time">🌐 データ取得</div>
+        <div class="tl-content">
+          <div class="tl-title">マクロ指標 + 全銘柄の株価</div>
+          <div class="tl-desc">VIX・ドル円・NYダウ・S&P500・日経平均・SOX指数を取得。ウォッチリスト25銘柄のRSI・移動平均・出来高を計算。</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">📚 履歴参照</div>
+        <div class="tl-content">
+          <div class="tl-title">過去7日間のアドバイスを確認</div>
+          <div class="tl-desc">先週どの銘柄を推奨したか・その後の値動きを追跡。一貫性のある判断のために使用。</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">🤖 AI分析</div>
+        <div class="tl-content">
+          <div class="tl-title">Claudeが売買判断を作成</div>
+          <div class="tl-desc">マクロ環境・テクニカル・過去履歴を総合して「買い/継続/売り」を判断。エントリー価格・目標値・損切り価格まで明示。</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">📧 メール</div>
+        <div class="tl-content">
+          <div class="tl-title">分析結果をメールで送信</div>
+          <div class="tl-desc">損切りアラートがある場合は冒頭に緊急表示。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 毎日届くメール -->
+  <div class="section">
+    <div class="section-title">📧 毎日届くメールの見方</div>
+    <div class="email-sample">
+      <div class="email-subject">【AI投資判断】06/16(Mon) 本日はリスクオン・キーエンス推奨</div>
+      <div class="email-body">
+### 本日の市場環境
+- VIX: 16.3（✅ リスクオン）
+- 米国市場: 前日比+1.5%（S&P500強い）
+- ドル円: 160円（円安基調）
+- 本日の基本姿勢: 【買い増し】
+
+### 保有銘柄の判断
+- 8306 三菱UFJ: ✅継続保有
+  現在値: 3,242円 | 買値: 2,865円 | 損益: +13.2%
+
+### 新規買い候補TOP3
+1位 6861 キーエンス [コア]
+   現在値: 75,650円 | RSI: 47
+   エントリー: 74,500円前後
+   目標値: 82,000円（+8%）| 損切り: 69,500円（-8%）
+   推奨数量: 1株（75,650円）
+      </div>
+    </div>
+    <div class="note" style="margin-top:12px">
+      <strong>損切りアラートが届いたら：</strong>メールの冒頭に「緊急」と表示されます。-8%を超えた銘柄は早めに対処してください。
+    </div>
+  </div>
+
+  <!-- 3. ファイル構成 -->
+  <div class="section">
+    <div class="section-title">📁 ファイル構成</div>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name">data/portfolio.json</span>
+        <span class="file-desc">現金・保有銘柄を管理。Webページから編集可能。<span class="tag tag-manual">手動</span></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name">data/watchlist.json</span>
+        <span class="file-desc">毎日分析する25銘柄リスト。VS Codeで編集。<span class="tag tag-manual">手動</span></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name">data/universe.json</span>
+        <span class="file-desc">月次入れ替えの候補50銘柄。通常は触らない。<span class="tag tag-manual">手動</span></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name">data/history.json</span>
+        <span class="file-desc">過去7日分の分析履歴。ボットが自動更新。<span class="tag tag-auto">自動</span></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name">main.py</span>
+        <span class="file-desc">ボットのメインプログラム。触らない。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name">.github/workflows/main.yml</span>
+        <span class="file-desc">毎朝7時に自動実行するスケジュール設定。</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 4. よくある操作 -->
+  <div class="section">
+    <div class="section-title">✏️ よくある操作</div>
+
+    <p style="font-weight:600;margin-bottom:8px">株を買ったとき</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Webページを開く</div>
+          <div class="step-desc">ブックマークから「ポートフォリオ管理」を開く</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">「＋ 銘柄を追加」をタップ</div>
+          <div class="step-desc">銘柄コード・銘柄名・株数・購入単価を入力</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">現金残高を更新して「保存する」</div>
+          <div class="step-desc">購入金額分を現金から引いた額に変更</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px">
+      <p style="font-weight:600;margin-bottom:8px">株を売ったとき</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Webページで該当銘柄を「削除」</div>
+            <div class="step-desc">保有銘柄一覧から削除ボタンをタップ</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">現金残高に売却額を加算して「保存する」</div>
+            <div class="step-desc">売却金額を現金に足した額に更新</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px">
+      <p style="font-weight:600;margin-bottom:8px">ウォッチリストを変えたいとき</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">VS Codeで data/watchlist.json を開く</div>
+            <div class="step-desc">左のファイル一覧から選択</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">銘柄を追加・削除して保存（Ctrl+S）</div>
+            <div class="step-desc">形式: <code>{"code": "7203", "name": "トヨタ自動車", "sector": "自動車"}</code></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">VS Codeの枝マーク → コミット → 同期</div>
+            <div class="step-desc">GitHubに反映されて翌朝から新リストで分析</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 月次ローテーション -->
+  <div class="section">
+    <div class="section-title">🔄 月次ウォッチリスト入れ替え</div>
+    <p>毎月の第1営業日（月初め最初の平日）に、通常メールに加えて<strong>「月次ローテーション提案」メール</strong>が届きます。</p>
+    <div class="note" style="margin-top:10px">
+      AIが50銘柄のユニバースから「外すべき銘柄」「追加すべき銘柄」を提案します。<strong>最終判断はあなたが行い</strong>、気に入った提案だけをwatchlist.jsonに反映してください。
+    </div>
+  </div>
+
+  <!-- 6. テクニカル指標の見方 -->
+  <div class="section">
+    <div class="section-title">📈 テクニカル指標の見方</div>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">RSI</span>
+        <span class="file-desc">30以下=売られすぎ（買い候補）、40〜65=スウィング買い適正、70以上=過熱（要注意）</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">MA25/MA75</span>
+        <span class="file-desc">MA25＞MA75なら中期上昇トレンド。MA25がMA75を下回ったら要注意（デッドクロス）</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">VIX</span>
+        <span class="file-desc">20以下=平常、20〜25=警戒、25超=新規買い禁止。「恐怖指数」とも呼ばれる</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">出来高比率</span>
+        <span class="file-desc">1.5以上=方向感のある動き。0.5以下=様子見相場。1.0が通常</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 7. リスク管理ルール -->
+  <div class="section">
+    <div class="section-title">🛡️ 自動適用されているリスク管理ルール</div>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name" style="min-width:120px">損切りライン</span>
+        <span class="file-desc">買値から-8%でアラート。メール冒頭に「緊急」表示</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:120px">1銘柄上限</span>
+        <span class="file-desc">総資産の15%まで。超える場合は1株単位（ミニ株）を推奨</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:120px">VIX連動</span>
+        <span class="file-desc">VIX25超は新規買い推奨なし。相場全体が不安定な時は現金維持</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:120px">最低保有期間</span>
+        <span class="file-desc">買ってから5営業日以内の売りは原則禁止（明確な損切りを除く）</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 8. FAQ -->
+  <div class="section">
+    <div class="section-title">❓ よくある質問</div>
+    <div class="qa">
+      <div class="q">メールが届かない日がある</div>
+      <div class="a">GitHubの <a href="https://github.com/aiueo2940819ai-ship-it/stock-advisor/actions" target="_blank">Actions タブ</a> でエラーが出ていないか確認してください。赤い×が付いていればエラーです。</div>
+    </div>
+    <div class="qa">
+      <div class="q">ウォッチリストにない銘柄が分析される</div>
+      <div class="a">保有銘柄がウォッチリストに含まれていない場合、自動的に追加取得します。watchlist.jsonに追加しておくと管理しやすいです。</div>
+    </div>
+    <div class="qa">
+      <div class="q">スマホのWebページが開けなくなった</div>
+      <div class="a">GitHub Personal Access Token の有効期限が切れている可能性があります。<a href="https://github.com/settings/tokens?type=beta" target="_blank">こちら</a>で再発行して「別のトークンに切り替える」から入力しなおしてください。</div>
+    </div>
+    <div class="qa">
+      <div class="q">「常時」とボタンを押したが大丈夫か</div>
+      <div class="a">問題ありません。VS Codeがステージング操作を自動化するだけで、GitHubへの送信（同期）は引き続き手動で行います。</div>
+    </div>
+    <div class="qa">
+      <div class="q">銘柄コードの調べ方は？</div>
+      <div class="a">Yahoo!ファイナンス（finance.yahoo.co.jp）で銘柄名を検索すると4桁のコードが確認できます。</div>
+    </div>
+  </div>
+
+  <!-- 9. 重要URL -->
+  <div class="section">
+    <div class="section-title">🔗 重要なリンク</div>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">ポートフォリオ管理</span>
+        <span class="file-desc"><a href="index.html">このサイトのトップ</a>（スマホでブックマーク推奨）</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">GitHub Actions</span>
+        <span class="file-desc"><a href="https://github.com/aiueo2940819ai-ship-it/stock-advisor/actions" target="_blank">実行ログの確認・手動実行</a></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">リポジトリ</span>
+        <span class="file-desc"><a href="https://github.com/aiueo2940819ai-ship-it/stock-advisor" target="_blank">ファイルの直接確認・編集</a></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">トークン管理</span>
+        <span class="file-desc"><a href="https://github.com/settings/tokens?type=beta" target="_blank">Personal Access Tokenの再発行</a></span>
+      </li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
