@@ -2,7 +2,7 @@ import json
 import re
 from datetime import date, datetime
 import anthropic
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
+from config import ANTHROPIC_API_KEY, CLAUDE_MODEL_FAST as CLAUDE_MODEL
 
 _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
