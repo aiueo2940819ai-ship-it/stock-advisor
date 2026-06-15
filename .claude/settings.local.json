@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "PowerShell(Get-ChildItem -Recurse -File | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"D:\\\\ClaudeCode\\\\おすすめ株通知スクリプト\\\\\", \"\"\\) })",
-      "PowerShell(New-Item -ItemType Directory -Force \"data\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"data\")",
+      "PowerShell(git config --global user.name \"aiueo2940819ai-ship-it\")",
+      "PowerShell(git config --global user.email \"aiueo2940819.ai@gmail.com\")",
+      "PowerShell(git config --global user.name)",
+      "PowerShell(git config --global user.email)",
+      "PowerShell(git init)",
+      "PowerShell(git add .)",
+      "PowerShell(git commit -m \"�����Z�b�g�A�b�v\")"
     ]
   }
 }
