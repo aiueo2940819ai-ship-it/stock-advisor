@@ -52,6 +52,7 @@ def _build_prompt(
     stock_map: dict,
     us_sector_signal: str = "",
     jp_sector_trend: str = "",
+    gekioshi_candidates: list[dict] = None,
 ) -> str:
     cash      = portfolio["cash_jpy"]
     total     = portfolio["total_asset_jpy"]
@@ -61,6 +62,10 @@ def _build_prompt(
     is_monday = datetime.now().weekday() == 0
 
     history_ctx = _history_context(history, stock_map)
+
+    cands     = gekioshi_candidates or []
+    n_cand    = len(cands)
+    cand_json = json.dumps(cands, ensure_ascii=False, indent=2) if cands else "（本日は条件通過銘柄なし）"
 
     weekly_instruction = (
         "\n⚠️ 今日は月曜日です。「先週のパフォーマンスレビュー」セクションを必ず追加し、"
@@ -98,6 +103,13 @@ def _build_prompt(
 {us_sector_signal}
 
 {jp_sector_trend}
+
+## 劇おすすめ広域候補（ウォッチリスト外・Python事前スクリーニング通過）
+※ 日経225規模の銘柄からMA/RSI/ATR/R/Rの定量条件を通過した上位{n_cand}件。
+  劇おすすめ選定時はウォッチリスト銘柄と同等に検討すること。
+  stop_est=ATRベース損切り目安、rr_ratio=リスクリワード比
+
+{cand_json}
 
 ## ウォッチリスト（本日の株価・テクニカル）
 テクニカル指標の見方:
@@ -256,8 +268,9 @@ def analyze_daily(
     stock_map: dict,
     us_sector_signal: str = "",
     jp_sector_trend: str = "",
+    gekioshi_candidates: list[dict] = None,
 ) -> dict:
-    prompt = _build_prompt(stock_data_list, portfolio, macro_data, history, stock_map, us_sector_signal, jp_sector_trend)
+    prompt = _build_prompt(stock_data_list, portfolio, macro_data, history, stock_map, us_sector_signal, jp_sector_trend, gekioshi_candidates)
 
     message = _client.messages.create(
         model=CLAUDE_MODEL,

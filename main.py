@@ -4,6 +4,7 @@ from src.data.market    import get_macro_data, get_us_sector_signal, get_jp_sect
 from src.data.stocks    import get_stock_data
 from src.data.portfolio import load_portfolio, update_highest_prices
 from src.data.history   import save_history, load_history
+from src.data.screener  import screen_gekioshi_candidates
 from src.analysis.analyzer          import analyze_daily
 from src.analysis.risk              import check_stop_loss
 from src.analysis.monthly_rotation  import is_first_business_day, load_universe, analyze_rotation
@@ -54,6 +55,13 @@ def main():
     print("  最高値チェック中...")
     update_highest_prices(portfolio, stock_map)
 
+    # ③-c 劇おすすめ広域スクリーニング（ウォッチリスト外の候補を抽出）
+    print("\n  劇おすすめ広域スクリーニング中（日経225規模）...")
+    gekioshi_candidates = screen_gekioshi_candidates(
+        n_candidates=5,
+        existing_codes=set(stock_map.keys()),
+    )
+
     # ④ 損切りチェック
     stop_alerts = check_stop_loss(
         portfolio.get("holdings", []),
@@ -69,7 +77,7 @@ def main():
     print(f"  {len(history)}日分の履歴を取得")
 
     print("\n[5/6] Claude分析中...")
-    result = analyze_daily(stock_data_list, portfolio, macro_data, history, stock_map, us_sector_signal, jp_sector_trend)
+    result = analyze_daily(stock_data_list, portfolio, macro_data, history, stock_map, us_sector_signal, jp_sector_trend, gekioshi_candidates)
 
     # ⑥ 履歴保存 → 日次メール送信
     print("\n[6/6] 履歴保存 & メール送信中...")
