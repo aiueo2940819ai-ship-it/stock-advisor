@@ -230,7 +230,9 @@ function addHoldingRow(h) {
         <label>平均購入単価（円）</label>
         <input type="number" id="hprice_${i}" value="${h.buy_price||''}" placeholder="2865" oninput="updateTotal()">
       </div>
-    </div>`;
+    </div>
+    <input type="hidden" id="hhigh_${i}"  value="${h.highest_price||''}">
+    <input type="hidden" id="hstop_${i}"  value="${h.stop_price||''}">`;
   document.getElementById('holdingsList').appendChild(div);
 }
 
@@ -266,12 +268,17 @@ function collectPortfolio() {
     if (!card) continue;
     const code = document.getElementById(`hcode_${i}`)?.value.trim();
     if (!code) continue;
-    holdings.push({
+    const highVal = parseFloat(document.getElementById(`hhigh_${i}`)?.value);
+    const stopVal = parseFloat(document.getElementById(`hstop_${i}`)?.value);
+    const entry = {
       code,
       name:      document.getElementById(`hname_${i}`)?.value.trim() || code,
       shares:    parseFloat(document.getElementById(`hshares_${i}`)?.value) || 0,
       buy_price: parseFloat(document.getElementById(`hprice_${i}`)?.value) || 0,
-    });
+    };
+    if (!isNaN(highVal)) entry.highest_price = highVal;
+    if (!isNaN(stopVal)) entry.stop_price    = stopVal;
+    holdings.push(entry);
   }
   return {
     cash_jpy:               parseFloat(document.getElementById('cashJpy').value) || 0,

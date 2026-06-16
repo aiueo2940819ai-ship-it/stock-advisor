@@ -9,7 +9,6 @@
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #333; line-height: 1.7; }
 .container { max-width: 680px; margin: 0 auto; padding: 16px 14px 80px; }
 
-/* ナビ */
 .nav { display: flex; gap: 8px; margin-bottom: 20px; }
 .nav a { flex: 1; text-align: center; padding: 10px; background: white; border-radius: 10px;
   text-decoration: none; color: #555; font-size: 13px; font-weight: 600;
@@ -19,7 +18,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
 .subtitle { font-size: 13px; color: #888; margin-bottom: 24px; }
 
-/* セクション */
 .section { background: white; border-radius: 16px; padding: 20px; margin-bottom: 14px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
 .section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px;
@@ -29,7 +27,6 @@ h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
 p { font-size: 14px; color: #444; margin-bottom: 10px; }
 p:last-child { margin-bottom: 0; }
 
-/* ステップ */
 .steps { counter-reset: step; }
 .step { display: flex; gap: 12px; margin-bottom: 14px; }
 .step:last-child { margin-bottom: 0; }
@@ -40,7 +37,6 @@ p:last-child { margin-bottom: 0; }
 .step-title { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 4px; }
 .step-desc { font-size: 13px; color: #666; }
 
-/* ファイル一覧 */
 .file-list { list-style: none; }
 .file-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f2f5; }
 .file-item:last-child { border-bottom: none; }
@@ -48,35 +44,33 @@ p:last-child { margin-bottom: 0; }
   min-width: 180px; flex-shrink: 0; }
 .file-desc { font-size: 13px; color: #666; }
 
-/* タグ */
 .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px;
   font-weight: 600; margin-left: 6px; }
 .tag-auto { background: #e8f5e9; color: #2e7d32; }
 .tag-manual { background: #e3f2fd; color: #1565c0; }
 .tag-alert { background: #fff3e0; color: #e65100; }
 
-/* タイムライン */
 .timeline { }
 .tl-item { display: flex; gap: 14px; margin-bottom: 16px; }
 .tl-item:last-child { margin-bottom: 0; }
 .tl-time { flex-shrink: 0; font-size: 13px; font-weight: 700; color: #1a1a2e;
-  min-width: 60px; padding-top: 1px; }
+  min-width: 70px; padding-top: 1px; }
 .tl-content { flex: 1; }
 .tl-title { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 3px; }
 .tl-desc  { font-size: 13px; color: #666; }
 
-/* コード */
 code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-radius: 4px;
   font-size: 13px; color: #d32f2f; }
 .code-block { background: #1a1a2e; color: #a5d6a7; font-family: monospace; font-size: 13px;
   padding: 14px; border-radius: 10px; margin: 10px 0; line-height: 1.6; overflow-x: auto; }
 
-/* 注意 */
 .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: 12px 14px;
   border-radius: 0 8px 8px 0; font-size: 13px; color: #555; margin: 10px 0; }
 .note strong { color: #e65100; }
+.note-fire { background: #fff3e0; border-left: 4px solid #ff5722; padding: 12px 14px;
+  border-radius: 0 8px 8px 0; font-size: 13px; color: #555; margin: 10px 0; }
+.note-fire strong { color: #bf360c; }
 
-/* Q&A */
 .qa { margin-bottom: 14px; }
 .qa:last-child { margin-bottom: 0; }
 .q { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
@@ -84,14 +78,30 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
 .a { font-size: 13px; color: #555; padding-left: 18px; }
 .a::before { content: "A. "; font-weight: 600; color: #666; margin-left: -18px; }
 
-/* メールサンプル */
 .email-sample { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 10px;
   padding: 14px; font-size: 13px; color: #333; }
 .email-subject { font-weight: 700; color: #1a1a2e; margin-bottom: 10px; padding-bottom: 8px;
   border-bottom: 1px solid #e0e0e0; }
+.email-subject.fire { color: #bf360c; }
 .email-body { white-space: pre-line; color: #444; line-height: 1.8; }
 
-/* 使用状況ダッシュボード */
+/* 売りルール表 */
+.rule-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+.rule-table th { background: #1a1a2e; color: white; padding: 8px 10px; text-align: left; }
+.rule-table td { padding: 8px 10px; border-bottom: 1px solid #f0f2f5; vertical-align: top; }
+.rule-table tr:last-child td { border-bottom: none; }
+.rule-table tr:nth-child(even) td { background: #f8f9fa; }
+.badge-sell { background: #ffebee; color: #c62828; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-hold { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+
+/* セクター表 */
+.sector-mark { font-weight: 700; }
+.s-a { color: #2e7d32; }
+.s-b { color: #1565c0; }
+.s-c { color: #e65100; }
+.s-d { color: #b71c1c; }
+
+/* API使用状況 */
 .usage-header { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .usage-card { background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; }
 .usage-card-val { font-size: 20px; font-weight: 700; color: #1a1a2e; }
@@ -100,8 +110,8 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
 .usage-table th { background: #f0f2f5; padding: 8px 6px; text-align: left; color: #555; font-weight: 600; }
 .usage-table td { padding: 8px 6px; border-bottom: 1px solid #f0f2f5; color: #444; }
 .usage-table tr:last-child td { border-bottom: none; }
-.badge-morning { background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
-.badge-evening { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+.badge-morning  { background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+.badge-evening  { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
 .badge-rotation { background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
 .load-btn { display: block; width: 100%; padding: 10px; background: #1a1a2e; color: white;
   border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 14px; }
@@ -113,7 +123,6 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
 <body>
 <div class="container">
 
-  <!-- ナビ -->
   <div class="nav">
     <a href="index.html">📊 ポートフォリオ</a>
     <a href="manual.html" class="active">📖 説明書</a>
@@ -130,29 +139,36 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
       <div class="tl-item">
         <div class="tl-time">🌐 データ取得</div>
         <div class="tl-content">
-          <div class="tl-title">マクロ指標 + 全銘柄の株価</div>
-          <div class="tl-desc">VIX・ドル円・NYダウ・S&P500・日経平均・SOX指数を取得。ウォッチリスト25銘柄のRSI・移動平均・出来高を計算。</div>
+          <div class="tl-title">マクロ指標 + セクター動向 + 全銘柄の株価</div>
+          <div class="tl-desc">VIX・ドル円・NYダウ・S&amp;P500・日経平均・SOX指数を取得。米国11セクターETF（XLF・XLK等）の前日騰落、TOPIX-17セクターETFの1ヶ月・3ヶ月トレンドを取得。ウォッチリスト全銘柄のRSI・移動平均・出来高・ATRを計算。</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">📈 最高値更新</div>
+        <div class="tl-content">
+          <div class="tl-title">保有銘柄の最高値を記録・ストップ価格を管理</div>
+          <div class="tl-desc">保有銘柄の最高値（highest_price）を毎日更新。トレイリングストップの計算に使用。</div>
         </div>
       </div>
       <div class="tl-item">
         <div class="tl-time">📚 履歴参照</div>
         <div class="tl-content">
-          <div class="tl-title">過去7日間のアドバイスを確認</div>
-          <div class="tl-desc">先週どの銘柄を推奨したか・その後の値動きを追跡。一貫性のある判断のために使用。</div>
+          <div class="tl-title">過去7〜14日間のアドバイスを確認</div>
+          <div class="tl-desc">先週どの銘柄を推奨したか・その後の値動きを追跡。一貫性のある判断のために使用。月曜は2週間分を参照。</div>
         </div>
       </div>
       <div class="tl-item">
         <div class="tl-time">🤖 AI分析</div>
         <div class="tl-content">
-          <div class="tl-title">Claudeが売買判断を作成</div>
-          <div class="tl-desc">マクロ環境・テクニカル・過去履歴を総合して「買い/継続/売り」を判断。エントリー価格・目標値・損切り価格まで明示。</div>
+          <div class="tl-title">Claudeが売買判断と劇おすすめを作成</div>
+          <div class="tl-desc">マクロ環境・セクター動向・テクニカル・過去履歴・保有状況を総合して判断。エントリー価格・目標値・ATRベースの損切り価格まで明示。</div>
         </div>
       </div>
       <div class="tl-item">
         <div class="tl-time">📧 メール</div>
         <div class="tl-content">
           <div class="tl-title">分析結果をメールで送信</div>
-          <div class="tl-desc">損切りアラートがある場合は冒頭に緊急表示。</div>
+          <div class="tl-desc">劇おすすめが出た日はメール件名に「🔥【劇おすすめ XXXX】」と表示。損切りアラートは冒頭に緊急表示。</div>
         </div>
       </div>
     </div>
@@ -161,64 +177,223 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
   <!-- 2. 毎日届くメール -->
   <div class="section">
     <div class="section-title">📧 毎日届くメールの見方</div>
+
+    <p style="font-weight:600;margin-bottom:8px">通常の日</p>
     <div class="email-sample">
-      <div class="email-subject">【AI投資判断】06/16(Mon) 本日はリスクオン・キーエンス推奨</div>
+      <div class="email-subject">【AI投資判断】06/17(Wed) 銀行セクター継続強い・キーエンス注目</div>
       <div class="email-body">
 ### 本日の市場環境
 - VIX: 16.3（✅ リスクオン）
-- 米国市場: 前日比+1.5%（S&P500強い）
-- ドル円: 160円（円安基調）
+- 米国市場: 前日比+1.2%（S&P500好調）
+- ドル円: 158円（円安基調）
 - 本日の基本姿勢: 【買い増し】
 
 ### 保有銘柄の判断
 - 8306 三菱UFJ: ✅継続保有
-  現在値: 3,242円 | 買値: 2,865円 | 損益: +13.2%
+  現在値: 3,150円 | 買値: 2,865円 | 損益: +9.9%
+  RSI: 54 | トレイリング: safe
 
-### 新規買い候補TOP3
+### 🔥 劇おすすめ（最高確信度の1銘柄）
+本日は劇おすすめ該当なし
+
+### 新規買い候補TOP2
 1位 6861 キーエンス [コア]
    現在値: 75,650円 | RSI: 47
    エントリー: 74,500円前後
-   目標値: 82,000円（+8%）| 損切り: 69,500円（-8%）
+   目標値: 82,000円（+8%）| 損切り: 69,500円（-7.5%）
    推奨数量: 1株（75,650円）
+
+2位 該当なし
       </div>
     </div>
-    <div class="note" style="margin-top:12px">
-      <strong>損切りアラートが届いたら：</strong>メールの冒頭に「緊急」と表示されます。-8%を超えた銘柄は早めに対処してください。
+
+    <p style="font-weight:600;margin-top:18px;margin-bottom:8px">劇おすすめが出た日</p>
+    <div class="email-sample">
+      <div class="email-subject fire">🔥【劇おすすめ 8306】06/17(Wed) 銀行セクター総強気シグナル</div>
+      <div class="email-body">
+### 🔥 劇おすすめ（最高確信度の1銘柄）
+8306 三菱UFJ 🔥劇おすすめ
+   現在値: 2,920円 | RSI: 52 | セクター: 銀行（◎ 強い上昇）
+   米国シグナル: XLF +2.1%（追い風）
+   エントリー: 2,920円 | 目標: 3,350円（+14.7%）| 損切り: 2,636円（-9.7%）
+   リスクリワード: 2.9倍
+   推奨株数: 20株（約58.4万円）
+      </div>
+    </div>
+    <div class="note-fire" style="margin-top:12px">
+      <strong>劇おすすめとは：</strong>通常の7条件に加え、セクター◎○・米国シグナル正・RSI40〜60・リスクリワード2倍以上の全条件を同時に満たした最高確信度の1銘柄です。頻繁には出ません。
+    </div>
+    <div class="note" style="margin-top:10px">
+      <strong>損切りアラートが届いたら：</strong>メールの冒頭に「緊急」と表示されます。stop_price（ATRストップ）を下回った銘柄は早めに対処してください。
     </div>
   </div>
 
-  <!-- 3. ファイル構成 -->
+  <!-- 3. 売り判断ルール -->
+  <div class="section">
+    <div class="section-title">🛡️ 売り判断ルール（AIが自動判定）</div>
+    <p>以下の優先順でAIが売り推奨を出します。何もなければ継続保有です。</p>
+    <table class="rule-table">
+      <thead>
+        <tr><th>ルール</th><th>条件</th><th>判定</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ATRストップ</strong></td>
+          <td>現在値が <code>stop_price</code> を下回った<br><small>（買値−ATR×2.5 と 買値−8% の厳しい方）</small></td>
+          <td><span class="badge-sell">即売り</span></td>
+        </tr>
+        <tr>
+          <td><strong>利確</strong></td>
+          <td>含み益 +20% 以上</td>
+          <td><span class="badge-sell">売り推奨</span></td>
+        </tr>
+        <tr>
+          <td><strong>デッドクロス</strong></td>
+          <td>MA25 がMA75を下回った</td>
+          <td><span class="badge-sell">売り推奨</span></td>
+        </tr>
+        <tr>
+          <td><strong>過熱</strong></td>
+          <td>RSI 75以上 かつ 出来高急増</td>
+          <td><span class="badge-sell">売り推奨</span></td>
+        </tr>
+        <tr>
+          <td><strong>トレイリングストップ</strong></td>
+          <td>+10%到達後→+3%以下に戻った<br>+15%到達後→+7%以下に戻った</td>
+          <td><span class="badge-sell">売り推奨</span></td>
+        </tr>
+        <tr>
+          <td><strong>タイムストップ</strong></td>
+          <td>15営業日保有 かつ 含み損益 ±5%以内</td>
+          <td><span class="badge-sell">売り検討</span></td>
+        </tr>
+        <tr>
+          <td><strong>テーマ崩壊</strong></td>
+          <td>購入理由（セクター・トレンド等）が否定された</td>
+          <td><span class="badge-sell">売り推奨</span></td>
+        </tr>
+        <tr>
+          <td><strong>その他</strong></td>
+          <td>上記に該当しない</td>
+          <td><span class="badge-hold">継続保有</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note" style="margin-top:12px">
+      <strong>stop_price について：</strong>銘柄ごとのATR（平均的な値動き幅）に基づいた損切り価格です。ボラが高い銘柄は損切りラインが広め、安定銘柄は狭くなります。ウェブで保有銘柄を保存しても自動で引き継がれます。
+    </div>
+  </div>
+
+  <!-- 4. 保有銘柄フィールド説明 -->
+  <div class="section">
+    <div class="section-title">📋 メールに表示される保有銘柄フィールド</div>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">highest_price</span>
+        <span class="file-desc">保有開始後の最高値（円）。毎朝自動更新。トレイリングストップの基準になる。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">stop_price</span>
+        <span class="file-desc">ATRベースの損切りライン（円）。初回取得時に自動計算。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">unrealized_pct</span>
+        <span class="file-desc">買値からの現在損益率（%）。プラスが含み益、マイナスが含み損。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">from_high_pct</span>
+        <span class="file-desc">最高値から現在値への下落率（%）。トレイリングストップ判定に使用。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:140px">trailing_alert</span>
+        <span class="file-desc"><code>exit</code>=売り推奨 / <code>caution</code>=要注意 / <code>safe</code>=問題なし</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 5. セクターシグナルの使い方 -->
+  <div class="section">
+    <div class="section-title">🌐 米国・日本セクターシグナル</div>
+    <p>毎朝のメールに2種類のセクター情報が含まれます。AIが判断に使いますが、自分でも参考にできます。</p>
+
+    <p style="font-weight:600;margin-top:14px;margin-bottom:6px">米国昨日セクター動向</p>
+    <p>米国市場の終値（日本時間5:00確定）が翌日の日本市場に影響を与える傾向があります。</p>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">XLF</span>
+        <span class="file-desc">米国金融ETF → 日本の銀行株（三菱UFJ・三井住友等）に影響</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">XLK</span>
+        <span class="file-desc">米国テックETF → 日本のIT・電機株（ソニー・キーエンス等）に影響</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">XLI</span>
+        <span class="file-desc">米国産業ETF → 日本の機械株（ダイキン・三菱重工等）に影響</span>
+      </li>
+    </ul>
+
+    <p style="font-weight:600;margin-top:14px;margin-bottom:6px">日本セクタートレンド（TOPIX-17）</p>
+    <p>1ヶ月・3ヶ月のトレンドを4段階で評価します。</p>
+    <ul class="file-list" style="margin-top:6px">
+      <li class="file-item" style="padding:6px 0">
+        <span class="file-name sector-mark s-a" style="min-width:40px">◎</span>
+        <span class="file-desc">強い上昇（1ヶ月+3%以上 かつ 3ヶ月+5%以上）― 買い環境として最適</span>
+      </li>
+      <li class="file-item" style="padding:6px 0">
+        <span class="file-name sector-mark s-b" style="min-width:40px">○</span>
+        <span class="file-desc">上昇（1ヶ月プラス）― 概ね追い風</span>
+      </li>
+      <li class="file-item" style="padding:6px 0">
+        <span class="file-name sector-mark s-c" style="min-width:40px">△</span>
+        <span class="file-desc">横ばい（1ヶ月-3%以上）― 慎重に</span>
+      </li>
+      <li class="file-item" style="padding:6px 0">
+        <span class="file-name sector-mark s-d" style="min-width:40px">✗</span>
+        <span class="file-desc">下落（1ヶ月-3%未満）― セクター全体が逆風</span>
+      </li>
+    </ul>
+    <div class="note" style="margin-top:10px">
+      米国シグナルはエントリータイミングの補助情報です。スウィング目線では複数日の傾向継続を確認してから判断することをAIに指示しています。
+    </div>
+  </div>
+
+  <!-- 6. ファイル構成 -->
   <div class="section">
     <div class="section-title">📁 ファイル構成</div>
     <ul class="file-list">
       <li class="file-item">
         <span class="file-name">data/portfolio.json</span>
-        <span class="file-desc">現金・保有銘柄を管理。Webページから編集可能。<span class="tag tag-manual">手動</span></span>
+        <span class="file-desc">現金・保有銘柄・stop_price・highest_priceを管理。Webページから編集可能。<span class="tag tag-manual">手動</span><span class="tag tag-auto">自動（最高値）</span></span>
       </li>
       <li class="file-item">
         <span class="file-name">data/watchlist.json</span>
-        <span class="file-desc">毎日分析する25銘柄リスト。VS Codeで編集。<span class="tag tag-manual">手動</span></span>
+        <span class="file-desc">毎日分析する銘柄リスト。VS Codeで編集。<span class="tag tag-manual">手動</span></span>
       </li>
       <li class="file-item">
         <span class="file-name">data/universe.json</span>
-        <span class="file-desc">月次入れ替えの候補50銘柄。通常は触らない。<span class="tag tag-manual">手動</span></span>
+        <span class="file-desc">月次入れ替えの候補銘柄。通常は触らない。<span class="tag tag-manual">手動</span></span>
       </li>
       <li class="file-item">
         <span class="file-name">data/history.json</span>
-        <span class="file-desc">過去7日分の分析履歴。ボットが自動更新。<span class="tag tag-auto">自動</span></span>
+        <span class="file-desc">過去30日分の分析履歴。ボットが自動更新。<span class="tag tag-auto">自動</span></span>
+      </li>
+      <li class="file-item">
+        <span class="file-name">data/usage.json</span>
+        <span class="file-desc">Claude APIのトークン使用量・コスト記録。<span class="tag tag-auto">自動</span></span>
       </li>
       <li class="file-item">
         <span class="file-name">main.py</span>
         <span class="file-desc">ボットのメインプログラム。触らない。</span>
       </li>
       <li class="file-item">
-        <span class="file-name">.github/workflows/main.yml</span>
-        <span class="file-desc">毎朝7時に自動実行するスケジュール設定。</span>
+        <span class="file-name">.github/workflows/</span>
+        <span class="file-desc">毎朝7時・夕方の自動実行スケジュール設定。</span>
       </li>
     </ul>
   </div>
 
-  <!-- 4. よくある操作 -->
+  <!-- 7. よくある操作 -->
   <div class="section">
     <div class="section-title">✏️ よくある操作</div>
 
@@ -242,7 +417,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
         <div class="step-num">3</div>
         <div class="step-body">
           <div class="step-title">現金残高を更新して「保存する」</div>
-          <div class="step-desc">購入金額分を現金から引いた額に変更</div>
+          <div class="step-desc">購入金額分を現金から引いた額に変更。翌朝にATRストップ（stop_price）と最高値が自動計算されます。</div>
         </div>
       </div>
     </div>
@@ -295,67 +470,60 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </div>
   </div>
 
-  <!-- 5. 月次ローテーション -->
-  <div class="section">
-    <div class="section-title">🔄 月次ウォッチリスト入れ替え</div>
-    <p>毎月の第1営業日（月初め最初の平日）に、通常メールに加えて<strong>「月次ローテーション提案」メール</strong>が届きます。</p>
-    <div class="note" style="margin-top:10px">
-      AIが50銘柄のユニバースから「外すべき銘柄」「追加すべき銘柄」を提案します。<strong>最終判断はあなたが行い</strong>、気に入った提案だけをwatchlist.jsonに反映してください。
-    </div>
-  </div>
-
-  <!-- 6. テクニカル指標の見方 -->
+  <!-- 8. テクニカル指標 -->
   <div class="section">
     <div class="section-title">📈 テクニカル指標の見方</div>
     <ul class="file-list">
       <li class="file-item">
         <span class="file-name" style="min-width:80px">RSI</span>
-        <span class="file-desc">30以下=売られすぎ（買い候補）、40〜65=スウィング買い適正、70以上=過熱（要注意）</span>
+        <span class="file-desc">30以下=売られすぎ、40〜65=スウィング買い適正、70以上=過熱（要注意）。劇おすすめはRSI40〜60のみ対象。</span>
       </li>
       <li class="file-item">
         <span class="file-name" style="min-width:80px">MA25/MA75</span>
-        <span class="file-desc">MA25＞MA75なら中期上昇トレンド。MA25がMA75を下回ったら要注意（デッドクロス）</span>
+        <span class="file-desc">MA25＞MA75なら中期上昇トレンド。MA25がMA75を下回ったら売り推奨（デッドクロス）。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:80px">ATR14</span>
+        <span class="file-desc">14日間の平均的な値動き幅。stop_priceの計算に使用（buy_price − ATR×2.5）。ボラが高い銘柄ほど損切りラインが広い。</span>
       </li>
       <li class="file-item">
         <span class="file-name" style="min-width:80px">VIX</span>
-        <span class="file-desc">20以下=平常、20〜25=警戒、25超=新規買い禁止。「恐怖指数」とも呼ばれる</span>
+        <span class="file-desc">20以下=平常、20〜25=警戒（1銘柄のみ許可）、25超=新規買い禁止。「恐怖指数」とも呼ばれる。</span>
       </li>
       <li class="file-item">
         <span class="file-name" style="min-width:80px">出来高比率</span>
-        <span class="file-desc">1.5以上=方向感のある動き。0.5以下=様子見相場。1.0が通常</span>
+        <span class="file-desc">1.5以上=方向感のある動き。0.5以下=様子見相場。0.7〜3.0が買い条件。</span>
       </li>
     </ul>
   </div>
 
-  <!-- 7. リスク管理ルール -->
+  <!-- 9. 月次ローテーション -->
   <div class="section">
-    <div class="section-title">🛡️ 自動適用されているリスク管理ルール</div>
-    <ul class="file-list">
-      <li class="file-item">
-        <span class="file-name" style="min-width:120px">損切りライン</span>
-        <span class="file-desc">買値から-8%でアラート。メール冒頭に「緊急」表示</span>
-      </li>
-      <li class="file-item">
-        <span class="file-name" style="min-width:120px">1銘柄上限</span>
-        <span class="file-desc">総資産の15%まで。超える場合は1株単位（ミニ株）を推奨</span>
-      </li>
-      <li class="file-item">
-        <span class="file-name" style="min-width:120px">VIX連動</span>
-        <span class="file-desc">VIX25超は新規買い推奨なし。相場全体が不安定な時は現金維持</span>
-      </li>
-      <li class="file-item">
-        <span class="file-name" style="min-width:120px">最低保有期間</span>
-        <span class="file-desc">買ってから5営業日以内の売りは原則禁止（明確な損切りを除く）</span>
-      </li>
-    </ul>
+    <div class="section-title">🔄 月次ウォッチリスト入れ替え</div>
+    <p>毎月の第1営業日（月初め最初の平日）に、通常メールに加えて<strong>「月次ローテーション提案」メール</strong>が届きます。</p>
+    <div class="note" style="margin-top:10px">
+      AIが候補銘柄リストから「外すべき銘柄」「追加すべき銘柄」を提案します。<strong>最終判断はあなたが行い</strong>、気に入った提案だけをwatchlist.jsonに反映してください。
+    </div>
   </div>
 
-  <!-- 8. FAQ -->
+  <!-- 10. FAQ -->
   <div class="section">
     <div class="section-title">❓ よくある質問</div>
     <div class="qa">
       <div class="q">メールが届かない日がある</div>
       <div class="a">GitHubの <a href="https://github.com/aiueo2940819ai-ship-it/stock-advisor/actions" target="_blank">Actions タブ</a> でエラーが出ていないか確認してください。赤い×が付いていればエラーです。</div>
+    </div>
+    <div class="qa">
+      <div class="q">劇おすすめはなかなか出ない</div>
+      <div class="a">条件が5つすべて重なる日だけ出ます。週に数回あれば多い方です。出ない日は「本日は劇おすすめ該当なし」と表示されます。</div>
+    </div>
+    <div class="qa">
+      <div class="q">Webで保存するとstop_priceが消えないか？</div>
+      <div class="a">問題ありません。Webページは stop_price と highest_price を内部で保持しており、保存しても消えないよう対応済みです。</div>
+    </div>
+    <div class="qa">
+      <div class="q">stop_priceはいつ計算される？</div>
+      <div class="a">初回（新しい銘柄を保有登録した翌朝）に自動計算されます。それ以降は変わりません（トレイリングストップと別の概念です）。</div>
     </div>
     <div class="qa">
       <div class="q">ウォッチリストにない銘柄が分析される</div>
@@ -366,16 +534,12 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
       <div class="a">GitHub Personal Access Token の有効期限が切れている可能性があります。<a href="https://github.com/settings/tokens?type=beta" target="_blank">こちら</a>で再発行して「別のトークンに切り替える」から入力しなおしてください。</div>
     </div>
     <div class="qa">
-      <div class="q">「常時」とボタンを押したが大丈夫か</div>
-      <div class="a">問題ありません。VS Codeがステージング操作を自動化するだけで、GitHubへの送信（同期）は引き続き手動で行います。</div>
-    </div>
-    <div class="qa">
       <div class="q">銘柄コードの調べ方は？</div>
       <div class="a">Yahoo!ファイナンス（finance.yahoo.co.jp）で銘柄名を検索すると4桁のコードが確認できます。</div>
     </div>
   </div>
 
-  <!-- 9. API使用状況 -->
+  <!-- 11. API使用状況 -->
   <div class="section">
     <div class="section-title">💰 API使用状況ダッシュボード</div>
     <p style="font-size:13px;color:#666;margin-bottom:12px">Claude APIのトークン使用量とコストを確認できます。ポートフォリオページでトークンを設定済みの場合は自動読み込みします。</p>
@@ -383,7 +547,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     <div id="usage-content"></div>
   </div>
 
-  <!-- 10. 重要URL -->
+  <!-- 12. 重要URL -->
   <div class="section">
     <div class="section-title">🔗 重要なリンク</div>
     <ul class="file-list">
@@ -452,7 +616,6 @@ function renderUsage(records) {
     return;
   }
 
-  // 今月の集計
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const monthRecords = records.filter(r => r.date && r.date.startsWith(thisMonth));
@@ -461,14 +624,12 @@ function renderUsage(records) {
   const totalIn   = monthRecords.reduce((s, r) => s + (r.input_tokens  || 0), 0);
   const totalOut  = monthRecords.reduce((s, r) => s + (r.output_tokens || 0), 0);
 
-  // バッジHTMLを返す
   function badge(task) {
     const cls = task === 'morning' ? 'badge-morning' : task === 'evening' ? 'badge-evening' : 'badge-rotation';
     const labels = { morning: '朝の分析', evening: '夕方サマリー', rotation: '月次ローテーション' };
     return `<span class="${cls}">${labels[task] || task}</span>`;
   }
 
-  // 最新30件（新しい順）の行を作る
   const rows = [...records].reverse().slice(0, 30).map(r => {
     const jpy = Math.round((r.cost_usd || 0) * 150);
     const model = r.model && r.model.includes('haiku') ? 'Haiku' : 'Sonnet';
@@ -508,7 +669,6 @@ function renderUsage(records) {
   `;
 }
 
-// ページ読み込み時にトークンがあれば自動ロード
 window.addEventListener('load', () => { if (getToken()) loadUsage(); });
 </script>
 </body>

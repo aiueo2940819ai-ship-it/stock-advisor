@@ -50,6 +50,8 @@ def _build_prompt(
     macro_data: list[dict],
     history: list[dict],
     stock_map: dict,
+    us_sector_signal: str = "",
+    jp_sector_trend: str = "",
 ) -> str:
     cash      = portfolio["cash_jpy"]
     total     = portfolio["total_asset_jpy"]
@@ -85,6 +87,18 @@ def _build_prompt(
 ## 保有銘柄
 {json.dumps(portfolio.get("holdings", []), ensure_ascii=False, indent=2)}
 
+保有銘柄フィールドの説明:
+- highest_price  : 保有開始後の最高値（円）
+- unrealized_pct : 買値からの現在損益率（%）
+- from_high_pct  : 最高値から現在値への下落率（%、マイナスが大きいほど戻り大）
+- trailing_alert : "exit"=トレイリングストップ到達→売り推奨 / "caution"=要注意 / "safe"=問題なし
+  ※ trailing_alert="exit" の銘柄は、含み益が一度大きく乗った後に失われており、
+     損切りラインに達していなくても売りを推奨する
+
+{us_sector_signal}
+
+{jp_sector_trend}
+
 ## ウォッチリスト（本日の株価・テクニカル）
 テクニカル指標の見方:
 - rsi14: 30以下=過売り、40-65=スウィング買い圏、70以上=過熱
@@ -104,13 +118,28 @@ def _build_prompt(
 - NYダウ/S&P500 前日-2%以下: リスクオフ、新規見送り
 - ドル円 前日比±1.5%以上: 為替敏感銘柄は様子見
 
-### 保有銘柄（デフォルト=継続保有）
-以下のいずれかでのみ売り推奨:
-- 損切りライン到達（-{abs(int(stop_loss*100))}%）
+### 保有銘柄の売り判断（デフォルト=継続保有）
+
+**【絶対売り】以下のいずれかで必ず売る:**
+- 損切りライン到達（各銘柄の stop_price を下回った場合）
+  ※ stop_price = ATRストップ（買値-ATR×2.5）とハードストップ（買値-8%）の厳しい方
+  ※ stop_price が未設定の場合は買値から-{abs(int(stop_loss*100))}%をハードストップとして使う
 - 利確水準到達（+20%以上）
 - デッドクロス発生（MA25 < MA75に転落）
 - RSI 75以上 + 出来高急増（天井示唆）
-- 買いの根拠が完全に崩れた場合
+
+**【トレイリングストップ】利益を守るための引き上げライン:**
+- 含み益が+10%を超えたことがある銘柄が、その後+3%以下まで戻った → 売り
+  （例: +15%まで上がり→+3%まで戻った時点で撤退、利益を守る）
+- 含み益が+15%を超えたことがある銘柄が、その後+7%以下まで戻った → 売り
+- ※ 「以前の高値から◯%戻した」はchange_5dと直近推移から推定すること
+
+**【タイムストップ】塩漬け防止:**
+- 保有期間が3週間（15営業日）を超え、かつ含み益が±5%以内 → 売り検討
+  （理由: 動かない銘柄は機会損失。別の銘柄に資金を回す）
+
+**【テーマ崩壊】買い根拠が消えたら保有継続しない:**
+- 購入理由（セクター上昇期待・トレンド転換等）が否定される材料が出た → 損益にかかわらず売り
 
 ### 新規買い条件（全て満たす銘柄のみ）
 1. MA25 > MA75（中期上昇トレンド確認）
@@ -142,7 +171,25 @@ def _build_prompt(
   RSI: X | MA25: X円 vs MA75: X円
   判断: （理由30字以内）
 
-### 新規買い候補TOP3
+### 🔥 劇おすすめ（最高確信度の1銘柄）
+以下の**全条件**を満たす銘柄が存在する場合のみ出力。なければ「本日は劇おすすめ該当なし」と1行で終わる。
+
+【劇おすすめ選定基準 — 全て満たすこと】
+1. 通常の新規買い7条件を全てクリア
+2. 日本セクタートレンドで該当セクターが「◎ 強い上昇」または「○ 上昇」
+3. 米国セクターシグナルで対応する米国セクターがプラス（追い風あり）
+4. リスクリワード比が2倍以上（目標値までの上昇幅 ÷ 損切りまでの下落幅 ≥ 2）
+5. RSIが40〜60の範囲（過熱でも売られすぎでもない、最も伸びやすい位置）
+
+**コード 銘柄名** 🔥劇おすすめ
+   現在値: X円 | RSI: X | セクター: XX（トレンド: ◎/○）
+   米国シグナル: XXXETF X%（追い風/逆風）
+   エントリー: X円 | 目標: X円（+X%） | 損切り（stop_price）: X円（-X%）
+   リスクリワード: X倍
+   推奨株数: X株（約X万円）
+   一言: （なぜ今これなのか30字以内）
+
+### 新規買い候補TOP2
 （リスクオン環境かつ現金30%以上の場合のみ。条件未達なら「本日は新規買い推奨なし（理由）」と明記）
 
 1位 **コード 銘柄名** [コア/サテライト]
@@ -156,7 +203,6 @@ def _build_prompt(
    前回との整合性: 初回推奨/前回継続/方針変更（変更理由）
 
 2位 （同形式 or 「該当なし」）
-3位 （同形式 or 「該当なし」）
 
 ### ポートフォリオ構成
 - 現在: コアX% / サテライトX% / 現金X%
@@ -177,7 +223,8 @@ def _build_prompt(
   "buy_codes":  ["例: 7203"],
   "sell_codes": [],
   "hold_codes": [],
-  "summary": "本日の一言サマリー（40字以内）"
+  "summary": "本日の一言サマリー（40字以内）",
+  "gekioshi_code": "劇おすすめが存在する場合はその銘柄コード（例: 7203）、存在しない場合は null"
 }}
 [/STRUCTURED_DATA]
 """
@@ -207,8 +254,10 @@ def analyze_daily(
     macro_data: list[dict],
     history: list[dict],
     stock_map: dict,
+    us_sector_signal: str = "",
+    jp_sector_trend: str = "",
 ) -> dict:
-    prompt = _build_prompt(stock_data_list, portfolio, macro_data, history, stock_map)
+    prompt = _build_prompt(stock_data_list, portfolio, macro_data, history, stock_map, us_sector_signal, jp_sector_trend)
 
     message = _client.messages.create(
         model=CLAUDE_MODEL,
@@ -230,5 +279,6 @@ def analyze_daily(
         "sell_codes":       structured.get("sell_codes", []),
         "hold_codes":       structured.get("hold_codes", []),
         "summary":          structured.get("summary",    ""),
+        "gekioshi_code":    structured.get("gekioshi_code"),
         "stock_snapshot":   _stock_snapshot(stock_data_list),
     }

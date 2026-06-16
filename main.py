@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from src.data.market    import get_macro_data
+from src.data.market    import get_macro_data, get_us_sector_signal, get_jp_sector_trend
 from src.data.stocks    import get_stock_data
-from src.data.portfolio import load_portfolio
+from src.data.portfolio import load_portfolio, update_highest_prices
 from src.data.history   import save_history, load_history
 from src.analysis.analyzer          import analyze_daily
 from src.analysis.risk              import check_stop_loss
@@ -17,9 +17,13 @@ def main():
     print("\n[1/6] ポートフォリオ読み込み中...")
     portfolio = load_portfolio()
 
-    # ② マクロデータ
+    # ② マクロデータ + 米国セクターシグナル
     print("\n[2/6] マクロ指標取得中...")
     macro_data = get_macro_data()
+    print("  米国セクターシグナル取得中...")
+    us_sector_signal = get_us_sector_signal()
+    print("  日本セクタートレンド取得中...")
+    jp_sector_trend = get_jp_sector_trend()
 
     # ③ 株価データ（ウォッチリスト + 保有銘柄の漏れを補完）
     watch_list    = portfolio.get("watch_list", [])
@@ -46,6 +50,10 @@ def main():
             rsi_str = f" RSI:{data['rsi14']}" if data.get("rsi14") else ""
             print(f"  ✓ {code} {s['name']}: {data['latest']:,.0f}円{rsi_str}")
 
+    # ③-b 最高値更新（highest_price を portfolio.json に記録）
+    print("  最高値チェック中...")
+    update_highest_prices(portfolio, stock_map)
+
     # ④ 損切りチェック
     stop_alerts = check_stop_loss(
         portfolio.get("holdings", []),
@@ -61,14 +69,16 @@ def main():
     print(f"  {len(history)}日分の履歴を取得")
 
     print("\n[5/6] Claude分析中...")
-    result = analyze_daily(stock_data_list, portfolio, macro_data, history, stock_map)
+    result = analyze_daily(stock_data_list, portfolio, macro_data, history, stock_map, us_sector_signal, jp_sector_trend)
 
     # ⑥ 履歴保存 → 日次メール送信
     print("\n[6/6] 履歴保存 & メール送信中...")
     save_history(result)
 
+    gekioshi = result.get("gekioshi_code")
     subject = (
-        f"【AI投資判断】{datetime.now().strftime('%m/%d(%a)')} "
+        f"{'🔥【劇おすすめ ' + gekioshi + '】' if gekioshi else '【AI投資判断】'}"
+        f"{datetime.now().strftime('%m/%d(%a)')} "
         f"{result.get('summary', '本日の分析')}"
     )
     body_parts = []

@@ -1,3 +1,17 @@
+def calc_atr(highs: list, lows: list, closes: list, period: int = 14) -> float | None:
+    """True Range の単純平均（ATR）を返す"""
+    if len(closes) < period + 1:
+        return None
+    trs = [
+        max(highs[i] - lows[i],
+            abs(highs[i] - closes[i - 1]),
+            abs(lows[i]  - closes[i - 1]))
+        for i in range(1, len(closes))
+    ]
+    recent = trs[-period:]
+    return round(sum(recent) / len(recent), 1)
+
+
 def calc_rsi(prices: list, period: int = 14) -> float | None:
     if len(prices) < period + 1:
         return None

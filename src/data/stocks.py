@@ -1,7 +1,7 @@
 import math
 import yfinance as yf
 from datetime import date
-from .indicators import calc_rsi, calc_mas, calc_change_pct
+from .indicators import calc_rsi, calc_mas, calc_change_pct, calc_atr
 
 
 def _f(val, ndigits: int = 1):
@@ -50,6 +50,8 @@ def get_stock_data(code: str) -> dict:
             return {"code": code, "error": "データなし"}
 
         prices  = _clean_prices(df["Close"].tolist())
+        highs   = _clean_prices(df["High"].tolist())
+        lows    = _clean_prices(df["Low"].tolist())
         volumes = df["Volume"].tolist()
 
         if not prices:
@@ -85,6 +87,7 @@ def get_stock_data(code: str) -> dict:
             "low_52w":          low_52w,
             "earnings_date":    earnings_date,
             "days_to_earnings": days_to_earnings,
+            "atr14":            calc_atr(highs, lows, prices),
             "prices_20d":       [_f(p) for p in prices[-20:]],
         }
     except Exception as e:
