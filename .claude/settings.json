@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m 'chore: nikkei225.jsonを117→201銘柄に拡充（日経225主要構成銘柄） *)",
+      "Bash(git commit -m 'chore: ユニバースを流動性重視で再編（201→162銘柄、低流動除去+高流動追加） *)"
+    ]
+  }
+}
