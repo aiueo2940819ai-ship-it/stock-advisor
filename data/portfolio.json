@@ -6,7 +6,7 @@
     {
       "code": "8306",
       "name": "三菱UFJフィナンシャル",
-      "shares": 18,
+      "shares": 17,
       "buy_price": 2729,
       "highest_price": 3228,
       "stop_price": 2636,
@@ -58,6 +58,19 @@
     },
     {
       "id": "1781717925969huff",
+      "date": "2026-06-17",
+      "code": "8306",
+      "name": "三菱UFJフィナンシャル",
+      "shares": 1,
+      "sell_price": 1,
+      "avg_buy_price": 2729,
+      "account": "NISA(成長枠)",
+      "realized_pnl": -2728,
+      "realized_pnl_after_tax": -2728,
+      "memo": ""
+    },
+    {
+      "id": "1781717965874p548",
       "date": "2026-06-17",
       "code": "8306",
       "name": "三菱UFJフィナンシャル",
