@@ -112,6 +112,23 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 
 .btn-archive { width: 100%; padding: 11px; background: #fff8e1; border: 1.5px solid #ffe082;
   color: #f57f17; font-size: 13px; font-weight: 600; border-radius: 12px; cursor: pointer; }
+.btn-csv { width: 100%; padding: 13px; background: #e8eaf6; border: none; border-radius: 12px;
+  color: #3949ab; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+
+.drop-zone { border: 2px dashed #c5cae9; border-radius: 12px; padding: 28px; text-align: center;
+  color: #5c6bc0; cursor: pointer; transition: background 0.2s; font-size: 14px; font-weight: 600; }
+.drop-zone.drag-over { background: #e8eaf6; border-color: #3949ab; }
+
+.csv-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.csv-tab  { flex: 1; padding: 7px 4px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+  background: white; font-size: 11px; font-weight: 600; cursor: pointer; color: #888; }
+.csv-tab.active { background: #3949ab; color: white; border-color: #3949ab; }
+
+.preview-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+.preview-table th { color: #888; padding: 4px 6px; text-align: left; border-bottom: 1px solid #eee; white-space: nowrap; }
+.preview-table td { padding: 5px 6px; border-bottom: 1px solid #f5f5f5; }
+.preview-table tr.skip td { color: #ccc; text-decoration: line-through; }
+.preview-count { font-size: 12px; color: #3949ab; font-weight: 600; margin-top: 8px; }
 
 /* モーダル */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
@@ -190,8 +207,9 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
       <canvas id="chart" height="160"></canvas>
     </div>
 
-    <!-- 新規登録 -->
+    <!-- 新規登録 / CSV -->
     <button class="btn btn-green" onclick="openModal(null)">＋ 取引を登録</button>
+    <button class="btn-csv" onclick="openCsvModal()">📥 楽天証券CSVを取り込む</button>
 
     <!-- 履歴 -->
     <div class="card">
@@ -206,7 +224,45 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
   <div class="spinner" id="spinner" style="display:none">読み込み中...</div>
 </div>
 
-<!-- モーダル -->
+<!-- CSVインポートモーダル -->
+<div class="modal-overlay" id="csvOverlay" onclick="onCsvOverlay(event)">
+  <div class="modal">
+    <h3>📥 楽天証券CSV取り込み</h3>
+    <div class="csv-tabs">
+      <button class="csv-tab active" data-t="auto" onclick="setCsvTab(this)">自動判定</button>
+      <button class="csv-tab" data-t="jp"   onclick="setCsvTab(this)">国内株</button>
+      <button class="csv-tab" data-t="us"   onclick="setCsvTab(this)">米国株</button>
+      <button class="csv-tab" data-t="fund" onclick="setCsvTab(this)">投資信託</button>
+    </div>
+    <div class="drop-zone" id="dropZone"
+         onclick="document.getElementById('csvFile').click()"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      📂 CSVをドロップ、またはタップして選択
+      <div style="font-size:11px;color:#aaa;margin-top:4px">楽天証券 → 口座管理 → 取引履歴 → CSV</div>
+    </div>
+    <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="onFileSelect(event)">
+    <div id="csvPreview"></div>
+    <div class="field" id="csvAcctWrap" style="display:none;margin-top:10px">
+      <label>証券口座（全件一括設定）</label>
+      <select id="csvAcct">
+        <option value="特定口座">特定口座（源泉 20.315%）</option>
+        <option value="NISA(一般)">NISA 一般枠</option>
+        <option value="NISA(成長枠)">NISA 成長投資枠</option>
+        <option value="一般口座">一般口座</option>
+      </select>
+    </div>
+    <div class="modal-btns" id="csvBtns" style="display:none">
+      <button class="btn-save"   onclick="importCsv()">取り込む</button>
+      <button class="btn-cancel" onclick="closeCsvModal()">キャンセル</button>
+    </div>
+    <button class="btn-cancel" id="csvClose" onclick="closeCsvModal()"
+            style="width:100%;padding:12px;border:none;border-radius:12px;background:#f5f5f5;color:#555;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px">
+      閉じる
+    </button>
+  </div>
+</div>
+
+<!-- 通常モーダル -->
 <div class="modal-overlay" id="overlay" onclick="onOverlayClick(event)">
   <div class="modal">
     <h3 id="modalTitle">取引を登録</h3>
@@ -682,6 +738,210 @@ async function persist(msg) {
   } catch(e) {
     st.className='status err'; st.textContent='❌ 保存失敗: '+e.message;
   }
+}
+
+// ── 楽天CSV取り込み ────────────────────────────────────────────────────────────
+
+let csvType = 'auto';
+let parsedRows = [];
+
+function openCsvModal()  { parsedRows=[]; document.getElementById('csvPreview').innerHTML=''; document.getElementById('csvAcctWrap').style.display='none'; document.getElementById('csvBtns').style.display='none'; document.getElementById('csvClose').style.display='block'; document.getElementById('csvOverlay').classList.add('open'); }
+function closeCsvModal() { document.getElementById('csvOverlay').classList.remove('open'); }
+function onCsvOverlay(e) { if(e.target===document.getElementById('csvOverlay')) closeCsvModal(); }
+function setCsvTab(btn)  { csvType=btn.dataset.t; document.querySelectorAll('.csv-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(parsedRows.length) renderCsvPreview(); }
+function onDragOver(e)   { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+function onDragLeave()   { document.getElementById('dropZone').classList.remove('drag-over'); }
+function onDrop(e)       { e.preventDefault(); onDragLeave(); const f=e.dataTransfer.files[0]; if(f) parseCsvFile(f); }
+function onFileSelect(e) { const f=e.target.files[0]; if(f) parseCsvFile(f); e.target.value=''; }
+
+async function parseCsvFile(file) {
+  let text;
+  try {
+    // UTF-8 BOM / UTF-8 を試す
+    text = await file.text();
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // BOM除去
+    // 文字化け検出（Shift-JIS の可能性）
+    if (text.includes('�') || /[\x80-\x9F]/.test(text)) throw new Error('sjis');
+  } catch {
+    const buf = await file.arrayBuffer();
+    text = new TextDecoder('shift-jis').decode(buf);
+  }
+
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  // ヘッダー行を探す（銘柄 or ファンド or ティッカーが含まれる行）
+  let headerIdx = lines.findIndex(l => /銘柄|ファンド|ティッカー|ticker/i.test(l));
+  if (headerIdx < 0) { alert('CSVのヘッダー行が見つかりません。楽天証券の取引履歴CSVか確認してください。'); return; }
+
+  const headers = parseCsvLine(lines[headerIdx]);
+  const rows    = lines.slice(headerIdx + 1).map(l => parseCsvLine(l)).filter(r => r.length > 1);
+
+  // CSV種別の自動検出
+  const type = csvType === 'auto' ? detectType(headers) : csvType;
+
+  parsedRows = rows.map(r => parseRow(headers, r, type)).filter(Boolean);
+  renderCsvPreview(type);
+}
+
+function parseCsvLine(line) {
+  const res=[]; let cur='', inQ=false;
+  for(const c of line) {
+    if(c==='"') inQ=!inQ;
+    else if(c===',' && !inQ) { res.push(cur.trim()); cur=''; }
+    else cur+=c;
+  }
+  res.push(cur.trim()); return res;
+}
+
+function detectType(headers) {
+  const h = headers.join(',');
+  if (/ティッカー|ticker/i.test(h)) return 'us';
+  if (/基準価額|ファンド|口数/i.test(h)) return 'fund';
+  return 'jp';
+}
+
+// カラム名で柔軟マッチ
+function col(headers, row, ...candidates) {
+  for (const c of candidates) {
+    const i = headers.findIndex(h => h.includes(c));
+    if (i >= 0 && row[i] != null) return row[i].trim();
+  }
+  return '';
+}
+
+function parseRow(headers, row, type) {
+  if (type === 'jp') return parseJp(headers, row);
+  if (type === 'us') return parseUs(headers, row);
+  if (type === 'fund') return parseFund(headers, row);
+  return null;
+}
+
+function parseJp(h, r) {
+  const date   = normalizeDate(col(h, r, '約定日', '取引日', '受渡日'));
+  const code   = col(h, r, '銘柄コード', 'コード').replace(/\D/g, '');
+  const name   = col(h, r, '銘柄名', '銘柄');
+  const side   = parseSide(col(h, r, '買付/売付', '売買区分', '取引区分'));
+  const shares = parseNum(col(h, r, '数量(株)', '数量', '株数'));
+  const price  = parseNum(col(h, r, '約定単価(円)', '約定単価', '単価(円)', '単価'));
+  if (!date || !side || !shares || !price) return null;
+  return { date, code: code||name, name: name||code, type: side, shares, price, currency: 'JPY' };
+}
+
+function parseUs(h, r) {
+  const date   = normalizeDate(col(h, r, '約定日', '取引日'));
+  const code   = col(h, r, 'ティッカー', 'Ticker', 'ticker');
+  const name   = col(h, r, '銘柄(日本語)', '銘柄名', '銘柄');
+  const side   = parseSide(col(h, r, '買付/売付', '売買区分', '取引区分'));
+  const shares = parseNum(col(h, r, '数量(株)', '数量'));
+  const price  = parseNum(col(h, r, '約定単価(現地通貨)', '約定単価', '単価'));
+  const fx     = parseNum(col(h, r, '為替レート', '為替'));
+  if (!date || !side || !shares || !price) return null;
+  const priceJpy = fx ? Math.round(price * fx) : null;
+  return { date, code, name: name||code, type: side, shares, price, priceJpy, currency: 'USD', fx };
+}
+
+function parseFund(h, r) {
+  const date   = normalizeDate(col(h, r, '取引日', '約定日', '処理日'));
+  const name   = col(h, r, 'ファンド名', '銘柄名', '銘柄');
+  const side   = parseSide(col(h, r, '取引区分', '売買区分', '取引種類'));
+  const kuchi  = parseNum(col(h, r, '口数', '口数(口)'));
+  const nav    = parseNum(col(h, r, '基準価額(円)', '基準価額', '取得価格'));
+  const amt    = parseNum(col(h, r, '受渡金額(円)', '受渡金額', '約定金額(円)', '金額'));
+  if (!date || !side) return null;
+  // 口あたり価格: 基準価額は「10,000口あたり円」が多い
+  const pricePerKuchi = nav ? nav / 10000 : (amt && kuchi ? amt / kuchi : 0);
+  return { date, code: name.slice(0,10), name, type: side, shares: kuchi||0, price: Math.round(pricePerKuchi*10000)/10000, currency: 'JPY', isFund: true };
+}
+
+function parseSide(v) {
+  if (!v) return null;
+  if (/買付|買い|購入|積立|スイッチング.*(買)|buy/i.test(v)) return 'buy';
+  if (/売付|売り|解約|スイッチング.*(売)|sell/i.test(v)) return 'sell';
+  return null;
+}
+
+function normalizeDate(v) {
+  if (!v) return '';
+  // YYYY/MM/DD or YYYY-MM-DD or YYYYMMDD
+  const m = v.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  const m2 = v.match(/(\d{4})(\d{2})(\d{2})/);
+  if (m2) return `${m2[1]}-${m2[2]}-${m2[3]}`;
+  return '';
+}
+
+function parseNum(v) {
+  if (!v) return 0;
+  return parseFloat(v.replace(/[,，\s円口株]/g,'')) || 0;
+}
+
+function renderCsvPreview(type) {
+  const el = document.getElementById('csvPreview');
+  if (!parsedRows.length) { el.innerHTML='<div style="color:#f44336;font-size:13px;margin-top:10px">⚠️ 取り込める行が見つかりませんでした。CSV種別タブを手動で切り替えてみてください。</div>'; return; }
+
+  const isFund = type==='fund' || parsedRows[0]?.isFund;
+  const isUs   = type==='us'   || parsedRows[0]?.currency==='USD';
+
+  let html = `<div class="preview-count">✅ ${parsedRows.length}件取り込み可能</div>
+  <div style="overflow-x:auto"><table class="preview-table"><thead><tr>
+    <th>日付</th><th>銘柄</th><th>区分</th>
+    <th>${isFund?'口数':'株数'}</th>
+    <th>${isFund?'基準価額(1口)':isUs?'単価(USD)':'単価(円)'}</th>
+    ${isUs?'<th>円換算</th>':''}
+  </tr></thead><tbody>`;
+
+  for (const r of parsedRows) {
+    const tCls = r.type==='buy'?'badge-buy':'badge-sell';
+    const tLbl = r.type==='buy'?'買い':'売り';
+    const priceDisp = isUs ? `$${r.price.toLocaleString()}` : (isFund ? (r.price*10000).toLocaleString()+'円/万口' : r.price.toLocaleString()+'円');
+    html += `<tr><td>${r.date}</td>
+      <td><b>${r.code}</b> <span style="color:#888;font-size:10px">${r.name}</span></td>
+      <td><span class="badge ${tCls}">${tLbl}</span></td>
+      <td>${(r.shares||0).toLocaleString()}</td>
+      <td>${priceDisp}</td>
+      ${isUs?`<td>${r.priceJpy?r.priceJpy.toLocaleString()+'円':'為替不明'}</td>`:''}
+    </tr>`;
+  }
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+  document.getElementById('csvAcctWrap').style.display = 'block';
+  document.getElementById('csvBtns').style.display     = 'grid';
+  document.getElementById('csvClose').style.display    = 'none';
+}
+
+async function importCsv() {
+  if (!parsedRows.length) return;
+  const account = document.getElementById('csvAcct').value;
+  const TAX = 0.20315;
+  const isNisa = ['NISA(一般)','NISA(成長枠)'].includes(account);
+
+  const newTrades = parsedRows.map(r => {
+    const price = r.currency==='USD' ? (r.priceJpy||Math.round(r.price*(r.fx||150))) : r.price;
+    return {
+      id:                     String(Date.now()) + Math.random().toString(36).slice(2,5),
+      date:                   r.date,
+      code:                   r.code,
+      name:                   r.name,
+      type:                   r.type,
+      shares:                 r.shares,
+      price:                  price,
+      account,
+      memo:                   `楽天CSVインポート${r.currency==='USD'?' (USD $'+r.price+')':''}${r.isFund?' (投資信託)':''}`,
+      avg_buy_price:          null,
+      realized_pnl:           null,
+      realized_pnl_after_tax: null,
+    };
+  });
+
+  // 重複チェック（同日・同銘柄・同区分・同株数）
+  const existing = new Set(db.trades.map(t => `${t.date}|${t.code}|${t.type}|${t.shares}`));
+  const deduped  = newTrades.filter(t => !existing.has(`${t.date}|${t.code}|${t.type}|${t.shares}`));
+  const skipped  = newTrades.length - deduped.length;
+
+  if (!deduped.length) { alert('すべて取り込み済みです（重複スキップ）'); return; }
+
+  db.trades.push(...deduped);
+  closeCsvModal();
+  await persist(`📥 ${deduped.length}件取り込み完了${skipped?' ('+skipped+'件重複スキップ)':''} ✅`);
 }
 
 window.onload=init;
