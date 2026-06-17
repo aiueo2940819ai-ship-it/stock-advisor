@@ -55,6 +55,14 @@ def main():
     print("  最高値チェック中...")
     update_highest_prices(portfolio, stock_map)
 
+    # ③-b2 総資産を時価ベースで再計算（買値ベースのズレを修正）
+    holdings_now = sum(
+        stock_map.get(h["code"], {}).get("latest", h.get("buy_price", 0)) * h.get("shares", 0)
+        for h in portfolio.get("holdings", [])
+    )
+    portfolio["total_asset_jpy"] = portfolio["cash_jpy"] + holdings_now
+    print(f"  時価総資産: {portfolio['total_asset_jpy']:,}円")
+
     # ③-c 劇おすすめ広域スクリーニング（ウォッチリスト外の候補を抽出）
     print("\n  劇おすすめ広域スクリーニング中（日経225規模）...")
     gekioshi_candidates = screen_gekioshi_candidates(
