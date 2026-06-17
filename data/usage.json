@@ -8,5 +8,15 @@
     "input_tokens": 4610,
     "output_tokens": 493,
     "cost_usd": 0.00566
+  },
+  {
+    "date": "2026-06-17",
+    "time": "11:56",
+    "task": "morning",
+    "task_label": "朝の分析",
+    "model": "claude-sonnet-4-6",
+    "input_tokens": 14670,
+    "output_tokens": 3000,
+    "cost_usd": 0.08901
   }
 ]
