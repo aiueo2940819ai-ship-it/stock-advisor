@@ -140,13 +140,17 @@ input:focus { outline: none; border-color: #4CAF50; background: white; }
 </div>
 
 <script>
-const OWNER = 'aiueo2940819ai-ship-it';
-const REPO  = 'stock-advisor';
-const FILE  = 'data/portfolio.json';
-const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+const OWNER     = 'aiueo2940819ai-ship-it';
+const REPO      = 'stock-advisor';
+const FILE      = 'data/portfolio.json';
+const API       = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+const TRADE_API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/trades.json`;
 
-let fileSha = null;
+let fileSha   = null;
 let holdingIdx = 0;
+let tradeSha  = null;
+let tradeDb   = { trades: [], archives: {} };
+let prevHoldings = [];  // 保存前のスナップショット
 
 function getToken() { return localStorage.getItem('gh_pat') || ''; }
 
@@ -174,13 +178,28 @@ async function init() {
   document.getElementById('spinner').style.display = 'block';
 
   try {
-    const res  = await fetch(API, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'API エラー');
+    const hdr = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+    const [portfRes, tradeRes] = await Promise.all([
+      fetch(API,       { headers: hdr }),
+      fetch(TRADE_API, { headers: hdr }),
+    ]);
+    const portfData = await portfRes.json();
+    if (!portfRes.ok) throw new Error(portfData.message || 'API エラー');
 
-    fileSha = data.sha;
-    const portfolio = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
+    fileSha = portfData.sha;
+    const portfolio = JSON.parse(decodeURIComponent(escape(atob(portfData.content.replace(/\n/g, '')))));
+    prevHoldings = JSON.parse(JSON.stringify(portfolio.holdings || []));
     renderForm(portfolio);
+
+    if (tradeRes.status === 404) {
+      tradeDb = { trades: [], archives: {} }; tradeSha = null;
+    } else {
+      const td = await tradeRes.json();
+      tradeSha = td.sha;
+      tradeDb  = JSON.parse(decodeURIComponent(escape(atob(td.content.replace(/\n/g, '')))));
+      if (!tradeDb.archives) tradeDb.archives = {};
+    }
+
     document.getElementById('spinner').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
   } catch (e) {
@@ -317,10 +336,77 @@ async function savePortfolio() {
     fileSha = data.content.sha;
     st.className = 'status ok';
     st.textContent = '✅ 保存完了！明朝のメールに反映されます。';
+    await autoRecordTrades(portfolio.holdings);
+    prevHoldings = JSON.parse(JSON.stringify(portfolio.holdings));
   } catch (e) {
     st.className = 'status err';
     st.textContent = '❌ 保存失敗: ' + e.message;
   }
+}
+
+async function autoRecordTrades(newHoldings) {
+  const today  = new Date().toISOString().slice(0, 10);
+  const oldMap = Object.fromEntries(prevHoldings.map(h => [h.code, h]));
+  const newMap = Object.fromEntries(newHoldings.map(h => [h.code, h]));
+  const records = [];
+
+  for (const [code, nh] of Object.entries(newMap)) {
+    const oh = oldMap[code];
+    if (!oh) {
+      // 新規追加 → 買い記録
+      records.push(_mkTrade('buy', today, nh, nh.shares, nh.buy_price, null));
+    } else if (nh.shares > oh.shares) {
+      // 株数増加 → 買い増し
+      records.push(_mkTrade('buy', today, nh, nh.shares - oh.shares, nh.buy_price, null));
+    } else if (nh.shares < oh.shares) {
+      // 株数減少 → 一部売り
+      const sp = prompt(`📉 ${nh.name||code} の株数が${oh.shares}→${nh.shares}株に減りました。\n売却単価（円/株）を入力してください（スキップ: キャンセル）:`);
+      if (sp) records.push(_mkTrade('sell_partial', today, oh, oh.shares - nh.shares, parseFloat(sp), oh.buy_price));
+    }
+  }
+  for (const [code, oh] of Object.entries(oldMap)) {
+    if (!newMap[code]) {
+      // 銘柄削除 → 全株売り
+      const sp = prompt(`📉 ${oh.name||code} を削除しました。\n売却した場合、売却単価（円/株）を入力してください（スキップ: キャンセル）:`);
+      if (sp) records.push(_mkTrade('sell', today, oh, oh.shares, parseFloat(sp), oh.buy_price));
+    }
+  }
+
+  if (!records.length) return;
+
+  tradeDb.trades.push(...records);
+  const json    = JSON.stringify(tradeDb, null, 2) + '\n';
+  const content = btoa(unescape(encodeURIComponent(json)));
+  const body    = { message: `取引履歴自動追記 ${today}`, content };
+  if (tradeSha) body.sha = tradeSha;
+
+  try {
+    const res  = await fetch(TRADE_API, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json', Accept: 'application/vnd.github+json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    tradeSha = data.content.sha;
+    const st = document.getElementById('status');
+    st.textContent += `  📝 取引記録に${records.length}件自動追記しました。`;
+  } catch(e) {
+    console.warn('取引自動記録失敗:', e.message);
+  }
+}
+
+function _mkTrade(type, date, h, shares, price, avgBuy) {
+  const TAX = 0.20315;
+  const pnl = (type !== 'buy' && avgBuy) ? Math.round((price - avgBuy) * shares) : null;
+  return {
+    id: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+    date, code: h.code, name: h.name || h.code, type, shares,
+    price: price || 0, account: '特定口座', memo: '自動記録',
+    avg_buy_price: avgBuy || null,
+    realized_pnl: pnl,
+    realized_pnl_after_tax: pnl != null ? Math.round(pnl * (1 - TAX)) : null,
+  };
 }
 
 window.onload = init;
