@@ -8,7 +8,7 @@
       "name": "三菱UFJフィナンシャル",
       "shares": 20,
       "buy_price": 2865,
-      "highest_price": 3228,
+      "highest_price": 3272.0,
       "stop_price": 2951.0,
       "lots": [
         {
@@ -19,7 +19,7 @@
         }
       ],
       "account": "NISA(成長枠)",
-      "current_price": 3228.0
+      "current_price": 3272.0
     },
     {
       "code": "3407",
@@ -35,8 +35,8 @@
         }
       ],
       "account": "NISA(成長枠)",
-      "highest_price": 1761.5,
-      "current_price": 1762.0,
+      "highest_price": 1790.0,
+      "current_price": 1790.0,
       "stop_price": 1618.0
     }
   ],
