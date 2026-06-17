@@ -38,6 +38,6 @@ jobs:
           git stash push -u -m "analysis-output" || true
           git pull origin main --rebase
           git stash pop || true
-          git add data/history.json data/usage.json || true
-          git diff --staged --quiet || git commit -m "chore: 分析履歴・使用状況更新 $(date +%Y-%m-%d)"
+          git add data/history.json data/usage.json data/portfolio.json || true
+          git diff --staged --quiet || git commit -m "chore: 分析履歴・使用状況・ポートフォリオ更新 $(date +%Y-%m-%d)"
           git push
