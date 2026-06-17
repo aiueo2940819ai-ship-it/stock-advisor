@@ -1,8 +1,20 @@
 import json
+import math
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from config import HISTORY_KEEP_DAYS
+
+
+def _sanitize(obj):
+    """NaN / Inf を None に変換して有効な JSON にする"""
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(v) for v in obj]
+    return obj
 
 _HISTORY_FILE = Path("data/history.json")
 
@@ -34,7 +46,7 @@ def save_history(result: dict) -> None:
 
     _HISTORY_FILE.parent.mkdir(exist_ok=True)
     with open(_HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, ensure_ascii=False, indent=2)
+        json.dump(_sanitize(history), f, ensure_ascii=False, indent=2)
 
     print(f"履歴保存完了（{len(history)}日分）")
 
