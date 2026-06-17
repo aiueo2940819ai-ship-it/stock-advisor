@@ -274,11 +274,12 @@ def analyze_daily(
 
     message = _client.messages.create(
         model=CLAUDE_MODEL,
-        max_tokens=3000,
+        max_tokens=8000,
+        thinking={"type": "adaptive"},
         messages=[{"role": "user", "content": prompt}],
     )
     log_usage("morning", CLAUDE_MODEL, message.usage.input_tokens, message.usage.output_tokens)
-    text       = message.content[0].text
+    text = next(b.text for b in message.content if b.type == "text")
     structured = _parse_structured(text)
 
     clean_text = re.sub(
