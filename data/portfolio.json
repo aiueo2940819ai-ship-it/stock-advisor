@@ -1,13 +1,13 @@
 {
-  "cash_jpy": 403739,
+  "cash_jpy": -4596261,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
     {
       "code": "8306",
       "name": "三菱UFJフィナンシャル",
-      "shares": 20,
-      "buy_price": 2865,
+      "shares": 21,
+      "buy_price": 240824,
       "highest_price": 3228,
       "stop_price": 2636,
       "lots": [
@@ -16,6 +16,12 @@
           "date": "",
           "shares": 20,
           "price": 2865
+        },
+        {
+          "id": "1781718964351fyx3",
+          "date": "2026-06-17",
+          "shares": 1,
+          "price": 5000000
         }
       ],
       "account": "NISA(成長枠)"
