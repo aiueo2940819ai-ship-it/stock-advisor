@@ -6,6 +6,7 @@ _USAGE_FILE = Path("data/usage.json")
 
 # 料金単価（$/token）
 _PRICES = {
+    "claude-opus-4-8":           {"input": 5.0  / 1_000_000, "output": 25.0 / 1_000_000},
     "claude-sonnet-4-6":         {"input": 3.0  / 1_000_000, "output": 15.0 / 1_000_000},
     "claude-haiku-4-5-20251001": {"input": 0.80 / 1_000_000, "output": 4.0  / 1_000_000},
 }
