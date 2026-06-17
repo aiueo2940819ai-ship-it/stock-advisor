@@ -54,6 +54,10 @@ def update_highest_prices(portfolio: dict, stock_map: dict) -> None:
                 if new_high != prev_high:
                     saved_h["highest_price"] = new_high
                     file_changed = True
+                cur_rounded = round(current, 0)
+                if saved_h.get("current_price") != cur_rounded:
+                    saved_h["current_price"] = cur_rounded
+                    file_changed = True
                 h["highest_price"] = saved_h.get("highest_price", buy)
             else:
                 h["highest_price"] = prev_high or buy

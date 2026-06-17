@@ -101,6 +101,15 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 .btn-edit { background: #e3f2fd; color: #1565c0; }
 .btn-del  { background: #ffebee; color: #c62828; }
 
+.holding-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+.holding-row:last-child { border-bottom:none; }
+.holding-info { flex:1; }
+.holding-name { font-size:13px; font-weight:600; }
+.holding-sub  { font-size:11px; color:#888; margin-top:2px; }
+.holding-pnl  { text-align:right; }
+.holding-pct  { font-size:13px; font-weight:700; }
+.holding-amt  { font-size:11px; color:#888; margin-top:2px; }
+
 .btn-archive { width: 100%; padding: 11px; background: #fff8e1; border: 1.5px solid #ffe082;
   color: #f57f17; font-size: 13px; font-weight: 600; border-radius: 12px; cursor: pointer; }
 
@@ -157,6 +166,17 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
         <div class="summary-label">今週の損益</div>
         <div class="summary-value zero" id="sWeekPnl">―</div>
       </div>
+    </div>
+
+    <!-- 含み損益 -->
+    <div class="card" id="unrealizedCard" style="display:none">
+      <h2>📊 含み損益（朝の取得価格基準）</h2>
+      <div id="unrealizedList"></div>
+      <div style="border-top:1px solid #f0f0f0;margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#888">合計含み損益</span>
+        <span class="summary-value" id="unrealizedTotal" style="font-size:16px">―</span>
+      </div>
+      <div style="font-size:10px;color:#bbb;margin-top:6px;text-align:right">※ 毎朝のGitHub Actions実行時に更新</div>
     </div>
 
     <!-- グラフ -->
@@ -250,9 +270,10 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 </div>
 
 <script>
-const OWNER     = 'aiueo2940819ai-ship-it';
-const REPO      = 'stock-advisor';
-const TRADE_API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/trades.json`;
+const OWNER      = 'aiueo2940819ai-ship-it';
+const REPO       = 'stock-advisor';
+const TRADE_API  = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/trades.json`;
+const PORTF_API  = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/portfolio.json`;
 const TAX       = 0.20315;
 const NISA      = ['NISA(一般)', 'NISA(成長枠)'];
 
@@ -283,15 +304,24 @@ async function init() {
   document.getElementById('tokenCard').style.display = 'none';
   document.getElementById('spinner').style.display   = 'block';
   try {
-    const res = await fetch(TRADE_API, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
-    if (res.status === 404) {
+    const hdr = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
+    const [tradeRes, portfRes] = await Promise.all([
+      fetch(TRADE_API, { headers: hdr }),
+      fetch(PORTF_API, { headers: hdr }),
+    ]);
+    if (tradeRes.status === 404) {
       db = { trades: [], archives: {} }; sha = null;
     } else {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = await tradeRes.json();
+      if (!tradeRes.ok) throw new Error(data.message);
       sha = data.sha;
       db  = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
       if (!db.archives) db.archives = {};
+    }
+    if (portfRes.ok) {
+      const pd = await portfRes.json();
+      const pf = JSON.parse(decodeURIComponent(escape(atob(pd.content.replace(/\n/g,'')))));
+      renderUnrealized(pf.holdings || []);
     }
     renderAll();
     document.getElementById('spinner').style.display     = 'none';
@@ -301,6 +331,42 @@ async function init() {
     document.getElementById('tokenCard').style.display = 'block';
     alert('読み込み失敗: ' + e.message);
   }
+}
+
+function renderUnrealized(holdings) {
+  const card = document.getElementById('unrealizedCard');
+  const list = document.getElementById('unrealizedList');
+  const hasCurrent = holdings.some(h => h.current_price != null);
+  if (!holdings.length || !hasCurrent) { card.style.display='none'; return; }
+
+  let totalUnreal = 0;
+  let html = '';
+  for (const h of holdings) {
+    const cur  = h.current_price;
+    const buy  = h.buy_price;
+    const sh   = h.shares || 0;
+    if (!cur || !buy || !sh) continue;
+    const pnl  = Math.round((cur - buy) * sh);
+    const pct  = ((cur - buy) / buy * 100).toFixed(1);
+    const sign = pnl >= 0 ? '+' : '';
+    totalUnreal += pnl;
+    html += `<div class="holding-row">
+      <div class="holding-info">
+        <div class="holding-name">${h.code} ${h.name||''}</div>
+        <div class="holding-sub">${sh}株 ／ 買値${buy.toLocaleString('ja-JP')}円 → ${cur.toLocaleString('ja-JP')}円</div>
+      </div>
+      <div class="holding-pnl">
+        <div class="holding-pct ${pnl>=0?'plus':'minus'}">${sign}${pct}%</div>
+        <div class="holding-amt ${pnl>=0?'plus':'minus'}">${sign}${pnl.toLocaleString('ja-JP')}円</div>
+      </div>
+    </div>`;
+  }
+  if (!html) { card.style.display='none'; return; }
+  list.innerHTML = html;
+  const tot = document.getElementById('unrealizedTotal');
+  tot.textContent = (totalUnreal>=0?'+':'') + totalUnreal.toLocaleString('ja-JP') + '円';
+  tot.className = 'summary-value ' + cls(totalUnreal);
+  card.style.display = 'block';
 }
 
 // ── ヘルパー ──────────────────────────────────────────────────────────────────
