@@ -54,8 +54,12 @@ input:disabled { color: #999; background: #f5f5f5; }
 .btn-edit-sm { background: #fff8e1; color: #f57f17; }
 .btn-del-sm  { background: #f5f5f5; color: #999; padding: 9px 12px; }
 
-.lot-line { font-size: 10px; color: #aaa; margin-bottom: 6px; line-height: 1.8; }
-.lot-chip { display: inline-block; background: #eeeeee; border-radius: 4px; padding: 1px 5px; margin-right: 3px; }
+.lot-line { font-size: 10px; margin-bottom: 8px; line-height: 2; }
+.lot-chip { display: inline-block; border-radius: 5px; padding: 2px 7px; margin-right: 4px; margin-bottom: 2px;
+  font-size: 10px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.lot-chip:active { opacity: 0.7; }
+.lot-buy  { background: #e3f2fd; color: #1565c0; }
+.lot-sell { background: #fce4ec; color: #c62828; }
 
 .token-card { background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
 .token-card h2 { color: #f57f17; }
@@ -246,6 +250,57 @@ input:disabled { color: #999; background: #f5f5f5; }
   </div>
 </div>
 
+<!-- 購入ロット 編集モーダル -->
+<div class="modal-overlay" id="editLotOverlay" onclick="onEditLotOverlay(event)">
+  <div class="modal">
+    <h3 id="editLotTitle">購入ロットを編集</h3>
+    <div class="field">
+      <label>購入日</label>
+      <input type="date" id="elDate">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>株数</label>
+        <input type="number" id="elShares" min="1">
+      </div>
+      <div class="field">
+        <label>購入単価（円）</label>
+        <input type="number" id="elPrice">
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="confirmEditLot()">保存</button>
+      <button class="btn-cancel" onclick="closeEditLot()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 売却チップ 編集モーダル -->
+<div class="modal-overlay" id="editSellChipOverlay" onclick="onEditSellChipOverlay(event)">
+  <div class="modal">
+    <h3 id="editSellChipTitle">売却記録を修正</h3>
+    <div class="field">
+      <label>売却日</label>
+      <input type="date" id="escDate">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>売却株数</label>
+        <input type="number" id="escShares" min="1" oninput="previewSellChipPnl()">
+      </div>
+      <div class="field">
+        <label>売却単価（円）</label>
+        <input type="number" id="escPrice" oninput="previewSellChipPnl()">
+      </div>
+    </div>
+    <div class="pnl-preview" id="escPnlPreview" style="display:none"></div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="confirmEditSellChip()">保存</button>
+      <button class="btn-cancel" onclick="closeEditSellChip()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const OWNER = 'aiueo2940819ai-ship-it';
 const REPO  = 'stock-advisor';
@@ -333,9 +388,14 @@ function makeCard(h) {
   const nisaBadge = NISA.includes(h.account)
     ? `<span style="font-size:10px;color:#2e7d32;background:#e8f5e9;padding:1px 5px;border-radius:3px;margin-left:4px">NISA</span>`
     : '';
-  const lotLine = (h.lots||[]).filter(l=>l.date).map(l =>
-    `<span class="lot-chip">${l.date.slice(5)} ${l.shares}株@${(l.price||0).toLocaleString()}円</span>`
-  ).join('');
+  const buyChips  = (h.lots||[]).filter(l=>l.date).map(l =>
+    `<span class="lot-chip lot-buy" onclick="openEditLot('${h.code}','${l.id}')">▲ ${l.date.slice(5)} ${l.shares}株@${(l.price||0).toLocaleString()}円 ✎</span>`
+  );
+  const sellRecs  = (portfolio.sell_history||[]).filter(s=>s.code===h.code&&s.date);
+  const sellChips = sellRecs.map(s =>
+    `<span class="lot-chip lot-sell" onclick="openEditSellChip('${s.id}')">▼ ${s.date.slice(5)} ${s.shares}株@${(s.sell_price||0).toLocaleString()}円 ✎</span>`
+  );
+  const allChips = [...buyChips, ...sellChips].join('');
   div.innerHTML = `
     <div class="holding-header">
       <div>
@@ -348,7 +408,7 @@ function makeCard(h) {
       <div class="stat-item"><div class="stat-label">平均取得単価</div><div class="stat-value">${(h.buy_price||0).toLocaleString()}円</div></div>
       <div class="stat-item"><div class="stat-label">評価額（取得額）</div><div class="stat-value">${total.toLocaleString()}円</div></div>
     </div>
-    ${lotLine ? `<div class="lot-line">${lotLine}</div>` : ''}
+    ${allChips ? `<div class="lot-line">${allChips}</div>` : ''}
     <div class="holding-actions">
       <button class="btn-action btn-buy-sm"  onclick="openBuyMore('${h.code}')">＋ 追加購入</button>
       <button class="btn-action btn-sell-sm" onclick="openSellModal('${h.code}')">売却</button>
@@ -469,6 +529,92 @@ function confirmEditHolding() {
   if (!isNaN(price)  && price > 0)  h.buy_price = price;
   if (!isNaN(shares) && shares > 0) h.shares    = shares;
   closeEditHolding();
+  renderHoldings(); updateTotal();
+  savePortfolio('auto');
+}
+
+// ── 購入ロット 編集 ───────────────────────────────────────────────────────────
+let editLotCode = null, editLotId = null;
+
+function openEditLot(code, lotId) {
+  const h   = (portfolio.holdings||[]).find(x=>x.code===code);
+  const lot = (h?.lots||[]).find(l=>l.id===lotId);
+  if (!lot) return;
+  editLotCode = code; editLotId = lotId;
+  document.getElementById('editLotTitle').textContent = `${h.code} ${h.name} 購入ロットを編集`;
+  document.getElementById('elDate').value   = lot.date||'';
+  document.getElementById('elShares').value = lot.shares;
+  document.getElementById('elPrice').value  = lot.price;
+  document.getElementById('editLotOverlay').classList.add('open');
+}
+function closeEditLot() { document.getElementById('editLotOverlay').classList.remove('open'); editLotCode=null; editLotId=null; }
+function onEditLotOverlay(e) { if(e.target===document.getElementById('editLotOverlay')) closeEditLot(); }
+
+function confirmEditLot() {
+  const h   = (portfolio.holdings||[]).find(x=>x.code===editLotCode);
+  const lot = (h?.lots||[]).find(l=>l.id===editLotId);
+  if (!lot) return;
+  const date   = document.getElementById('elDate').value;
+  const shares = parseFloat(document.getElementById('elShares').value)||0;
+  const price  = parseFloat(document.getElementById('elPrice').value)||0;
+  if (!shares||!price) { alert('株数と単価は必須です'); return; }
+  const delta = shares - lot.shares;
+  lot.date = date; lot.shares = shares; lot.price = price;
+  h.shares = Math.max(0, h.shares + delta);
+  const totalShares = (h.lots||[]).reduce((s,l)=>s+l.shares, 0);
+  const totalCost   = (h.lots||[]).reduce((s,l)=>s+l.shares*l.price, 0);
+  if (totalShares > 0) h.buy_price = Math.round(totalCost / totalShares);
+  closeEditLot();
+  renderHoldings(); updateTotal();
+  savePortfolio('auto');
+}
+
+// ── 売却チップ 編集 ───────────────────────────────────────────────────────────
+let editSellChipId = null;
+
+function openEditSellChip(id) {
+  const t = (portfolio.sell_history||[]).find(x=>x.id===id);
+  if (!t) return;
+  editSellChipId = id;
+  document.getElementById('editSellChipTitle').textContent = `${t.code} ${t.name} 売却記録を修正`;
+  document.getElementById('escDate').value   = t.date;
+  document.getElementById('escShares').value = t.shares;
+  document.getElementById('escPrice').value  = t.sell_price;
+  previewSellChipPnl();
+  document.getElementById('editSellChipOverlay').classList.add('open');
+}
+function closeEditSellChip() { document.getElementById('editSellChipOverlay').classList.remove('open'); editSellChipId=null; }
+function onEditSellChipOverlay(e) { if(e.target===document.getElementById('editSellChipOverlay')) closeEditSellChip(); }
+
+function previewSellChipPnl() {
+  const t  = (portfolio.sell_history||[]).find(x=>x.id===editSellChipId);
+  const s  = parseFloat(document.getElementById('escShares').value)||0;
+  const p  = parseFloat(document.getElementById('escPrice').value)||0;
+  const el = document.getElementById('escPnlPreview');
+  if (!t||!s||!p) { el.style.display='none'; return; }
+  const pnl    = Math.round((p - t.avg_buy_price) * s);
+  const isNisa = NISA.includes(t.account);
+  const pat    = isNisa ? pnl : Math.round(pnl*(1-TAX));
+  el.innerHTML = `損益（税前）: <b style="color:${pnl>=0?'#4CAF50':'#f44336'}">${fmtPnl(pnl)}</b>　${isNisa?'NISA非課税':`税引後: <b style="color:${pat>=0?'#4CAF50':'#f44336'}">${fmtPnl(pat)}</b>`}`;
+  el.style.display = 'block';
+}
+
+function confirmEditSellChip() {
+  const t = (portfolio.sell_history||[]).find(x=>x.id===editSellChipId);
+  if (!t) return;
+  const date   = document.getElementById('escDate').value;
+  const shares = parseFloat(document.getElementById('escShares').value)||0;
+  const price  = parseFloat(document.getElementById('escPrice').value)||0;
+  if (!date||!shares||!price) { alert('日付・株数・単価は必須です'); return; }
+  const delta  = t.shares - shares;
+  const pnl    = Math.round((price - t.avg_buy_price) * shares);
+  const isNisa = NISA.includes(t.account);
+  const pnlAft = isNisa ? pnl : Math.round(pnl*(1-TAX));
+  // 保有中なら株数差分を反映
+  const h = (portfolio.holdings||[]).find(x=>x.code===t.code);
+  if (h) h.shares = Math.max(0, h.shares + delta);
+  Object.assign(t, { date, shares, sell_price: price, realized_pnl: pnl, realized_pnl_after_tax: pnlAft });
+  closeEditSellChip();
   renderHoldings(); updateTotal();
   savePortfolio('auto');
 }
