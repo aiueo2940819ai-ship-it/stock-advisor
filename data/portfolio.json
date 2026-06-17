@@ -6,8 +6,8 @@
     {
       "code": "8306",
       "name": "三菱UFJフィナンシャル",
-      "shares": 20,
-      "buy_price": 2729,
+      "shares": 19,
+      "buy_price": 2865,
       "highest_price": 3228,
       "stop_price": 2636,
       "lots": [
@@ -16,12 +16,6 @@
           "date": "",
           "shares": 20,
           "price": 2865
-        },
-        {
-          "id": "1781717030367i4dt",
-          "date": "2026-06-17",
-          "shares": 1,
-          "price": 1
         }
       ],
       "account": "NISA(成長枠)"
