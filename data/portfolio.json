@@ -9,13 +9,32 @@
       "shares": 20,
       "buy_price": 2865,
       "highest_price": 3228,
-      "stop_price": 2636
+      "stop_price": 2636,
+      "lots": [
+        {
+          "id": "1781716994643cuu2",
+          "date": "",
+          "shares": 20,
+          "price": 2865
+        }
+      ],
+      "account": "NISA(成長枠)"
     },
     {
       "code": "3407",
       "name": "旭化成",
       "shares": 50,
-      "buy_price": 1755
+      "buy_price": 1755,
+      "lots": [
+        {
+          "id": "1781716994643usug",
+          "date": "",
+          "shares": 50,
+          "price": 1755
+        }
+      ],
+      "account": "特定口座"
     }
-  ]
+  ],
+  "sell_history": []
 }
