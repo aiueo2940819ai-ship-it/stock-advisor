@@ -394,31 +394,78 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </ul>
   </div>
 
-  <!-- 7. よくある操作 -->
+  <!-- 7. ポートフォリオページの使い方 -->
+  <div class="section">
+    <div class="section-title">📊 ポートフォリオページの使い方</div>
+    <p>売買の登録・修正はすべてポートフォリオページ（index.html）から行います。損益タブは閲覧専用です。</p>
+
+    <p style="font-weight:600;margin-top:16px;margin-bottom:6px">銘柄カードの見方</p>
+    <ul class="file-list">
+      <li class="file-item">
+        <span class="file-name" style="min-width:100px;color:#1565c0">▲ 青チップ</span>
+        <span class="file-desc">購入ロット。タップすると日付・株数・単価を編集、またはロット削除できます。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:100px;color:#c62828">▼ 赤チップ</span>
+        <span class="file-desc">売却記録。タップすると日付・株数・単価を編集、または記録削除できます。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:100px">追加購入</span>
+        <span class="file-desc">同じ銘柄を買い増したとき。加重平均で取得単価が自動再計算されます。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:100px">売却</span>
+        <span class="file-desc">売却日・株数・売却単価を入力。損益が自動計算され「📈 損益」タブに反映されます。全株売却なら保有一覧から自動削除。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:100px">編集</span>
+        <span class="file-desc">銘柄名・口座種別（特定口座 / NISA(成長枠)）・単価・株数を修正します。</span>
+      </li>
+      <li class="file-item">
+        <span class="file-name" style="min-width:100px">削除</span>
+        <span class="file-desc">銘柄カードごと削除します。誤登録の取り消しに使用。</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 8. よくある操作 -->
   <div class="section">
     <div class="section-title">✏️ よくある操作</div>
 
-    <p style="font-weight:600;margin-bottom:8px">株を買ったとき</p>
+    <p style="font-weight:600;margin-bottom:8px">株を新規で買ったとき</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-body">
-          <div class="step-title">Webページを開く</div>
-          <div class="step-desc">ブックマークから「ポートフォリオ管理」を開く</div>
+          <div class="step-title">「＋ 銘柄を追加」をタップ</div>
+          <div class="step-desc">銘柄コード・銘柄名・株数・購入単価・口座（特定口座 or NISA(成長枠)）を入力</div>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-body">
-          <div class="step-title">「＋ 銘柄を追加」をタップ</div>
-          <div class="step-desc">銘柄コード・銘柄名・株数・購入単価を入力</div>
+          <div class="step-title">「追加する」をタップ → 自動保存</div>
+          <div class="step-desc">カードに青い購入ロットチップが表示されます。翌朝にstop_priceと最高値が自動計算されます。</div>
         </div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">現金残高を更新して「保存する」</div>
-          <div class="step-desc">購入金額分を現金から引いた額に変更。翌朝にATRストップ（stop_price）と最高値が自動計算されます。</div>
+    </div>
+
+    <div style="margin-top:18px">
+      <p style="font-weight:600;margin-bottom:8px">同じ銘柄を追加購入したとき</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">該当銘柄カードの「追加購入」をタップ</div>
+            <div class="step-desc">購入日・株数・購入単価を入力</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">「追加する」をタップ → 自動保存</div>
+            <div class="step-desc">取得単価が加重平均で自動更新。カードに青チップが1つ増えます。</div>
+          </div>
         </div>
       </div>
     </div>
@@ -429,18 +476,39 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
         <div class="step">
           <div class="step-num">1</div>
           <div class="step-body">
-            <div class="step-title">Webページで該当銘柄を「削除」</div>
-            <div class="step-desc">保有銘柄一覧から削除ボタンをタップ</div>
+            <div class="step-title">該当銘柄カードの「売却」をタップ</div>
+            <div class="step-desc">売却日（デフォルト本日）・売却株数・売却単価を入力</div>
           </div>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-body">
-            <div class="step-title">現金残高に売却額を加算して「保存する」</div>
-            <div class="step-desc">売却金額を現金に足した額に更新</div>
+            <div class="step-title">「確定」をタップ → 自動保存</div>
+            <div class="step-desc">損益が自動計算され「📈 損益」タブに反映。カードに赤い売却チップが表示されます。全株売却なら翌日以降に保有一覧から消えます（株数0になります）。</div>
           </div>
         </div>
       </div>
+    </div>
+
+    <div style="margin-top:18px">
+      <p style="font-weight:600;margin-bottom:8px">登録内容を修正したいとき</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">修正したいチップをタップ</div>
+            <div class="step-desc">青チップ（購入ロット）または赤チップ（売却記録）をタップするとモーダルが開きます</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">日付・株数・単価を修正して「保存」</div>
+            <div class="step-desc">誤登録の場合は「このロットを削除」/「この売却記録を削除」ボタンで取り消せます。株数差分は自動で補正されます。</div>
+          </div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:10px">損益タブ（trades.html）は閲覧専用です。修正は必ずポートフォリオページから行ってください。</div>
     </div>
 
     <div style="margin-top:18px">
@@ -471,7 +539,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </div>
   </div>
 
-  <!-- 8. テクニカル指標 -->
+  <!-- 9. テクニカル指標 -->
   <div class="section">
     <div class="section-title">📈 テクニカル指標の見方</div>
     <ul class="file-list">
@@ -498,7 +566,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </ul>
   </div>
 
-  <!-- 9. 月次ローテーション -->
+  <!-- 10. 月次ローテーション -->
   <div class="section">
     <div class="section-title">🔄 月次ウォッチリスト入れ替え</div>
     <p>毎月の第1営業日（月初め最初の平日）に、通常メールに加えて<strong>「月次ローテーション提案」メール</strong>が届きます。</p>
@@ -507,7 +575,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </div>
   </div>
 
-  <!-- 10. FAQ -->
+  <!-- 11. FAQ -->
   <div class="section">
     <div class="section-title">❓ よくある質問</div>
     <div class="qa">
@@ -531,6 +599,22 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
       <div class="a">保有銘柄がウォッチリストに含まれていない場合、自動的に追加取得します。watchlist.jsonに追加しておくと管理しやすいです。</div>
     </div>
     <div class="qa">
+      <div class="q">売却したのに損益タブに出ない</div>
+      <div class="a">損益タブはポートフォリオページの「売却」ボタンから登録した記録を表示します。売却ボタンを使わずに銘柄カードを削除しただけでは損益に反映されません。</div>
+    </div>
+    <div class="qa">
+      <div class="q">含み損益の金額が古い</div>
+      <div class="a">含み損益は毎朝GitHub Actionsが実行されたときに更新されます。週末・祝日は更新されません。</div>
+    </div>
+    <div class="qa">
+      <div class="q">損益タブから売却記録を修正できない</div>
+      <div class="a">損益タブは閲覧専用です。修正・削除はポートフォリオページの各銘柄カードにある赤いチップ（売却記録）をタップして行ってください。</div>
+    </div>
+    <div class="qa">
+      <div class="q">同じ銘柄を複数回買った場合の取得単価は？</div>
+      <div class="a">加重平均法で自動計算されます。例：100株@1,000円 → 100株@1,200円 の追加購入なら取得単価は1,100円になります。</div>
+    </div>
+    <div class="qa">
       <div class="q">スマホのWebページが開けなくなった</div>
       <div class="a">GitHub Personal Access Token の有効期限が切れている可能性があります。<a href="https://github.com/settings/tokens?type=beta" target="_blank">こちら</a>で再発行して「別のトークンに切り替える」から入力しなおしてください。</div>
     </div>
@@ -540,7 +624,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     </div>
   </div>
 
-  <!-- 11. API使用状況 -->
+  <!-- 12. API使用状況 -->
   <div class="section">
     <div class="section-title">💰 API使用状況ダッシュボード</div>
     <p style="font-size:13px;color:#666;margin-bottom:12px">Claude APIのトークン使用量とコストを確認できます。ポートフォリオページでトークンを設定済みの場合は自動読み込みします。</p>
@@ -548,7 +632,7 @@ code { font-family: monospace; background: #f5f5f5; padding: 1px 6px; border-rad
     <div id="usage-content"></div>
   </div>
 
-  <!-- 12. 重要URL -->
+  <!-- 13. 重要URL -->
   <div class="section">
     <div class="section-title">🔗 重要なリンク</div>
     <ul class="file-list">

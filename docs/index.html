@@ -87,6 +87,7 @@ input:disabled { color: #999; background: #f5f5f5; }
 .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
 .btn-save   { background: #4CAF50; color: white; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
 .btn-cancel { background: #f5f5f5; color: #555; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-danger { background: #ffebee; color: #c62828; padding: 11px; border: none; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; }
 .pnl-preview { font-size: 13px; background: #f8f9fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
 .info-box { font-size: 12px; color: #555; background: #f0f2f5; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; line-height: 1.6; }
 </style>
@@ -272,6 +273,7 @@ input:disabled { color: #999; background: #f5f5f5; }
       <button class="btn-save" onclick="confirmEditLot()">保存</button>
       <button class="btn-cancel" onclick="closeEditLot()">キャンセル</button>
     </div>
+    <button class="btn-danger" onclick="deleteLot()">このロットを削除</button>
   </div>
 </div>
 
@@ -298,6 +300,7 @@ input:disabled { color: #999; background: #f5f5f5; }
       <button class="btn-save" onclick="confirmEditSellChip()">保存</button>
       <button class="btn-cancel" onclick="closeEditSellChip()">キャンセル</button>
     </div>
+    <button class="btn-danger" onclick="deleteSellChip()">この売却記録を削除</button>
   </div>
 </div>
 
@@ -569,6 +572,21 @@ function confirmEditLot() {
   savePortfolio('auto');
 }
 
+function deleteLot() {
+  const h = (portfolio.holdings||[]).find(x=>x.code===editLotCode);
+  const lot = (h?.lots||[]).find(l=>l.id===editLotId);
+  if (!lot) return;
+  if (!confirm(`${lot.date||''} ${lot.shares}株@${lot.price}円 の購入ロットを削除しますか？`)) return;
+  h.shares = Math.max(0, h.shares - lot.shares);
+  h.lots = (h.lots||[]).filter(l=>l.id!==editLotId);
+  const totalShares = (h.lots||[]).reduce((s,l)=>s+l.shares, 0);
+  const totalCost   = (h.lots||[]).reduce((s,l)=>s+l.shares*l.price, 0);
+  if (totalShares > 0) h.buy_price = Math.round(totalCost / totalShares);
+  closeEditLot();
+  renderHoldings(); updateTotal();
+  savePortfolio('auto');
+}
+
 // ── 売却チップ 編集 ───────────────────────────────────────────────────────────
 let editSellChipId = null;
 
@@ -614,6 +632,18 @@ function confirmEditSellChip() {
   const h = (portfolio.holdings||[]).find(x=>x.code===t.code);
   if (h) h.shares = Math.max(0, h.shares + delta);
   Object.assign(t, { date, shares, sell_price: price, realized_pnl: pnl, realized_pnl_after_tax: pnlAft });
+  closeEditSellChip();
+  renderHoldings(); updateTotal();
+  savePortfolio('auto');
+}
+
+function deleteSellChip() {
+  const t = (portfolio.sell_history||[]).find(x=>x.id===editSellChipId);
+  if (!t) return;
+  if (!confirm(`${t.date||''} ${t.shares}株@${t.sell_price}円 の売却記録を削除しますか？\n※保有株数がその分戻ります`)) return;
+  const h = (portfolio.holdings||[]).find(x=>x.code===t.code);
+  if (h) h.shares = h.shares + t.shares;
+  portfolio.sell_history = (portfolio.sell_history||[]).filter(x=>x.id!==editSellChipId);
   closeEditSellChip();
   renderHoldings(); updateTotal();
   savePortfolio('auto');

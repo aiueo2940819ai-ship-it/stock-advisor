@@ -99,22 +99,6 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 .badge-acnt { background: #f5f5f5; color: #888; }
 .badge-nisa { background: #e8f5e9; color: #2e7d32; }
 
-.btn-sm { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
-  cursor: pointer; border: none; margin-left: 3px; }
-.btn-edit { background: #e3f2fd; color: #1565c0; }
-.btn-del  { background: #ffebee; color: #c62828; }
-
-/* モーダル（売却編集） */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
-  display: none; align-items: flex-end; justify-content: center; }
-.modal-overlay.open { display: flex; }
-.modal { background: white; border-radius: 20px 20px 0 0; padding: 20px 16px 36px;
-  width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; }
-.modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #1a1a2e; }
-.modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-.btn-save   { background: #4CAF50; color: white; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
-.btn-cancel { background: #f5f5f5; color: #555; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
-.pnl-preview { font-size: 13px; background: #f8f9fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
 .hint { font-size: 11px; color: #aaa; margin-top: 4px; }
 </style>
 </head>
@@ -185,49 +169,13 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
     <!-- 売却履歴 -->
     <div class="card">
       <h2>📋 売却履歴</h2>
-      <p class="hint" style="margin-bottom:10px">売却はポートフォリオページの「売却」ボタンから登録します。誤りは「編集」で修正できます。</p>
+      <p class="hint" style="margin-bottom:10px">売却・修正はポートフォリオページの各銘柄カードから行ってください。</p>
       <div id="historyContainer"></div>
     </div>
 
-    <div class="status" id="status"></div>
   </div>
 
   <div class="spinner" id="spinner" style="display:none">読み込み中...</div>
-</div>
-
-<!-- 売却記録 編集モーダル -->
-<div class="modal-overlay" id="editOverlay" onclick="onEditOverlay(event)">
-  <div class="modal">
-    <h3 id="editTitle">売却記録を修正</h3>
-    <div class="field">
-      <label>売却日</label>
-      <input type="date" id="eDate">
-    </div>
-    <div class="grid2">
-      <div class="field">
-        <label>売却株数</label>
-        <input type="number" id="eShares" min="1" oninput="previewEdit()">
-      </div>
-      <div class="field">
-        <label>売却単価（円）</label>
-        <input type="number" id="ePrice" oninput="previewEdit()">
-      </div>
-    </div>
-    <div class="field">
-      <label>平均取得単価（円）</label>
-      <input type="number" id="eAvgBuy" oninput="previewEdit()">
-      <div class="hint">修正すると損益が再計算されます</div>
-    </div>
-    <div class="pnl-preview" id="ePnlPreview" style="display:none"></div>
-    <div class="field">
-      <label>メモ（任意）</label>
-      <textarea id="eMemo"></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-save"   onclick="saveEdit()">保存</button>
-      <button class="btn-cancel" onclick="closeEditModal()">キャンセル</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -237,11 +185,9 @@ const PORTF_API= `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/po
 const TAX      = 0.20315;
 const NISA     = ['NISA(成長枠)'];
 
-let portfSha = null;
-let portfolio = null;  // full portfolio object
+let portfolio = null;
 let chartObj  = null;
 let period    = 'cumulative';
-let editId    = null;
 
 function sells() { return portfolio?.sell_history || []; }
 
@@ -268,7 +214,6 @@ async function init() {
     const res  = await fetch(PORTF_API, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
-    portfSha = data.sha;
     portfolio = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
     if (!portfolio.sell_history) portfolio.sell_history = [];
     renderUnrealized(portfolio.holdings || []);
@@ -415,7 +360,7 @@ function renderHistory() {
       </summary>
       <div style="overflow-x:auto">
       <table class="trade-table"><thead><tr>
-        <th>日付</th><th>銘柄</th><th>株数</th><th>売値</th><th>取得単価</th><th>損益（税前）</th><th>口座</th><th></th>
+        <th>日付</th><th>銘柄</th><th>株数</th><th>売値</th><th>取得単価</th><th>損益（税前）</th><th>口座</th>
       </tr></thead><tbody>`;
       for (const t of byYear[yr][mo]) {
         const acls = NISA.includes(t.account) ? 'badge-nisa' : 'badge-acnt';
@@ -427,10 +372,6 @@ function renderHistory() {
           <td style="color:#888">${(t.avg_buy_price||0).toLocaleString()}円</td>
           <td><span class="${cls(t.realized_pnl)}">${fmt(t.realized_pnl)}</span></td>
           <td><span class="badge ${acls}">${t.account}</span></td>
-          <td style="white-space:nowrap">
-            <button class="btn-sm btn-edit" onclick="openEdit('${t.id}')">編集</button>
-            <button class="btn-sm btn-del"  onclick="delSell('${t.id}')">削除</button>
-          </td>
         </tr>`;
       }
       html += `</tbody></table></div></details></div>`;
@@ -449,87 +390,6 @@ function renderAll() {
   renderHistory();
 }
 
-// ── 売却記録 編集モーダル ─────────────────────────────────────────────────────
-function openEdit(id) {
-  const t = sells().find(x=>x.id===id);
-  if (!t) return;
-  editId = id;
-  document.getElementById('editTitle').textContent = `${t.code} ${t.name} の売却記録を修正`;
-  document.getElementById('eDate').value   = t.date;
-  document.getElementById('eShares').value = t.shares;
-  document.getElementById('ePrice').value  = t.sell_price;
-  document.getElementById('eAvgBuy').value = t.avg_buy_price;
-  document.getElementById('eMemo').value   = t.memo||'';
-  previewEdit();
-  document.getElementById('editOverlay').classList.add('open');
-}
-
-function closeEditModal() { document.getElementById('editOverlay').classList.remove('open'); editId=null; }
-function onEditOverlay(e) { if(e.target===document.getElementById('editOverlay')) closeEditModal(); }
-
-function previewEdit() {
-  const s   = parseFloat(document.getElementById('eShares').value)||0;
-  const p   = parseFloat(document.getElementById('ePrice').value)||0;
-  const ab  = parseFloat(document.getElementById('eAvgBuy').value)||0;
-  const t   = sells().find(x=>x.id===editId);
-  const el  = document.getElementById('ePnlPreview');
-  if (!s||!p||!ab||!t) { el.style.display='none'; return; }
-  const pnl    = Math.round((p-ab)*s);
-  const isNisa = NISA.includes(t.account);
-  const pat    = isNisa ? pnl : Math.round(pnl*(1-TAX));
-  el.innerHTML = `損益（税前）: <b class="${cls(pnl)}">${fmt(pnl)}</b>　${isNisa?'NISA非課税':`税引後: <b class="${cls(pat)}">${fmt(pat)}</b>`}`;
-  el.style.display = 'block';
-}
-
-async function saveEdit() {
-  const t = sells().find(x=>x.id===editId);
-  if (!t) return;
-  const date   = document.getElementById('eDate').value;
-  const shares = parseFloat(document.getElementById('eShares').value)||0;
-  const price  = parseFloat(document.getElementById('ePrice').value)||0;
-  const avgBuy = parseFloat(document.getElementById('eAvgBuy').value)||0;
-  const memo   = document.getElementById('eMemo').value.trim();
-  if (!date||!shares||!price||!avgBuy) { alert('全項目を入力してください'); return; }
-
-  const pnl    = Math.round((price-avgBuy)*shares);
-  const isNisa = NISA.includes(t.account);
-  const pnlAft = isNisa ? pnl : Math.round(pnl*(1-TAX));
-
-  Object.assign(t, { date, shares, sell_price: price, avg_buy_price: avgBuy, memo, realized_pnl: pnl, realized_pnl_after_tax: pnlAft });
-  closeEditModal();
-  await persist('修正しました ✅');
-}
-
-async function delSell(id) {
-  const t = sells().find(x=>x.id===id);
-  if (!confirm(`${t?.name||id} の売却記録を削除しますか？`)) return;
-  portfolio.sell_history = portfolio.sell_history.filter(x=>x.id!==id);
-  await persist('削除しました');
-}
-
-// ── GitHub保存 ────────────────────────────────────────────────────────────────
-async function persist(msg) {
-  const token   = getToken();
-  const json    = JSON.stringify(portfolio, null, 2) + '\n';
-  const content = btoa(unescape(encodeURIComponent(json)));
-  const body    = { message: `損益更新 ${new Date().toLocaleDateString('ja-JP')}`, content, sha: portfSha };
-  const st = document.getElementById('status');
-  st.className='status'; st.textContent='保存中...'; st.style.display='block';
-  try {
-    const res  = await fetch(PORTF_API, {
-      method:'PUT',
-      headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json', Accept:'application/vnd.github+json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
-    portfSha = data.content.sha;
-    st.className='status ok'; st.textContent=msg;
-    renderAll();
-  } catch(e) {
-    st.className='status err'; st.textContent='❌ 保存失敗: '+e.message;
-  }
-}
 
 window.onload = init;
 </script>
