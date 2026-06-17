@@ -42,19 +42,5 @@
       "account": "NISA(成長枠)"
     }
   ],
-  "sell_history": [
-    {
-      "id": "17817170708329dk7",
-      "date": "2026-06-17",
-      "code": "8306",
-      "name": "三菱UFJフィナンシャル",
-      "shares": 1,
-      "sell_price": 1,
-      "avg_buy_price": 2729,
-      "account": "NISA(成長枠)",
-      "realized_pnl": -2728,
-      "realized_pnl_after_tax": -2728,
-      "memo": ""
-    }
-  ]
+  "sell_history": []
 }
