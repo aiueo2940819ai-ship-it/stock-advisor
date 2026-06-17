@@ -64,6 +64,18 @@ def screen_gekioshi_candidates(n_candidates: int = 5, existing_codes: set = None
                         (lo - c.shift(1)).abs()], axis=1).max(axis=1)
         return tr.rolling(p).mean().iloc[-1]
 
+    def adx_series(h, lo, c, p=14):
+        tr   = pd.concat([(h - lo), (h - c.shift()).abs(), (lo - c.shift()).abs()], axis=1).max(axis=1)
+        atr  = tr.rolling(p).mean()
+        dmp  = (h - h.shift()).clip(lower=0)
+        dmm  = (lo.shift() - lo).clip(lower=0)
+        dmp  = dmp.where(dmp > dmm, 0)
+        dmm  = dmm.where(dmm > dmp, 0)
+        di_p = 100 * dmp.rolling(p).mean() / atr.replace(0, np.nan)
+        di_m = 100 * dmm.rolling(p).mean() / atr.replace(0, np.nan)
+        dx   = 100 * (di_p - di_m).abs() / (di_p + di_m).replace(0, np.nan)
+        return dx.rolling(p).mean()
+
     candidates = []
 
     for code in codes:
@@ -92,7 +104,11 @@ def screen_gekioshi_candidates(n_candidates: int = 5, existing_codes: set = None
         va    = vol_avg.iloc[-1]
         vr    = float(v.iloc[-1] / va) if va > 0 else 1.0
 
-        if any(pd.isna(x) for x in [price, m25, m75, r, vr]):
+        adx_ser    = adx_series(h, lo, c)
+        adx_val    = adx_ser.iloc[-1]
+        adx_rising = adx_val > adx_ser.iloc[-6] if len(adx_ser) >= 6 else False
+
+        if any(pd.isna(x) for x in [price, m25, m75, r, vr, adx_val]):
             continue
 
         # ── 定量スクリーニング条件 ──────────────────────────────
@@ -100,6 +116,7 @@ def screen_gekioshi_candidates(n_candidates: int = 5, existing_codes: set = None
         if not (40 <= r <= 60):    continue   # RSI適正ゾーン（劇おすすめ専用）
         if chg5 < -7:              continue   # 急落なし
         if not (0.7 <= vr <= 3.0): continue   # 出来高適正
+        if adx_val < 15 or not adx_rising:  continue   # トレンド弱い or 失速中
 
         # セクター（✗のみ除外、不明は通す）
         etf = STOCK_TO_SECTOR_ETF.get(code)
@@ -123,13 +140,14 @@ def screen_gekioshi_candidates(n_candidates: int = 5, existing_codes: set = None
         if downside <= 0 or upside / downside < 2.0:
             continue
 
-        # スコア（RSI位置・トレンド強度・R/R・出来高）
+        # スコア（RSI位置・トレンド強度・R/R・出来高・ADX）
         rsi_score   = 1 - abs(r - 50) / 10
         trend_score = min((m25 - m75) / m75 * 100 / 5, 1.0)
         rr_score    = min(upside / downside / 4, 1.0)
         vol_score   = min(vr, 2.0) / 2.0
-        score = (rsi_score * 0.35 + trend_score * 0.30
-                 + rr_score * 0.20 + vol_score * 0.15)
+        adx_score   = min(adx_val / 40, 1.0)
+        score = (rsi_score * 0.30 + trend_score * 0.25
+                 + rr_score * 0.20 + vol_score * 0.10 + adx_score * 0.15)
 
         candidates.append({
             'code':               code,
@@ -139,6 +157,7 @@ def screen_gekioshi_candidates(n_candidates: int = 5, existing_codes: set = None
             'ma75':               round(m75, 0),
             'rsi14':              round(r, 1),
             'atr14':              round(atr_val, 1),
+            'adx14':              round(adx_val, 1),
             'vol_ratio':          round(vr, 2),
             'change_5d':          round(chg5, 2),
             'stop_est':           round(stop, 0),
