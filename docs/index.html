@@ -51,6 +51,7 @@ input:disabled { color: #999; background: #f5f5f5; }
 .btn-action:active { opacity: 0.75; }
 .btn-buy-sm  { background: #e3f2fd; color: #1565c0; }
 .btn-sell-sm { background: #fce4ec; color: #c62828; }
+.btn-edit-sm { background: #fff8e1; color: #f57f17; }
 .btn-del-sm  { background: #f5f5f5; color: #999; padding: 9px 12px; }
 
 .lot-line { font-size: 10px; color: #aaa; margin-bottom: 6px; line-height: 1.8; }
@@ -132,20 +133,6 @@ input:disabled { color: #999; background: #f5f5f5; }
       <button class="btn btn-blue" onclick="openAddModal()">＋ 銘柄を追加</button>
     </div>
 
-    <div class="card">
-      <h2>⚙️ リスク設定</h2>
-      <div class="grid2">
-        <div class="field">
-          <label>1銘柄上限（%）</label>
-          <input type="number" id="maxRatio" placeholder="15">
-        </div>
-        <div class="field">
-          <label>損切りライン（%）</label>
-          <input type="number" id="stopLoss" placeholder="-8">
-        </div>
-      </div>
-    </div>
-
     <button class="btn btn-green" onclick="savePortfolio()">💾 保存する</button>
     <div class="status" id="status"></div>
   </div>
@@ -186,7 +173,6 @@ input:disabled { color: #999; background: #f5f5f5; }
       <label>証券口座</label>
       <select id="mAccount">
         <option value="特定口座">特定口座（源泉 20.315%）</option>
-        <option value="NISA(一般)">NISA 一般枠（非課税）</option>
         <option value="NISA(成長枠)">NISA 成長投資枠（非課税）</option>
         <option value="一般口座">一般口座（確定申告 20.315%）</option>
       </select>
@@ -225,12 +211,47 @@ input:disabled { color: #999; background: #f5f5f5; }
   </div>
 </div>
 
+<!-- 保有銘柄 編集モーダル -->
+<div class="modal-overlay" id="editHoldingOverlay" onclick="onEditHoldingOverlay(event)">
+  <div class="modal">
+    <h3 id="editHoldingTitle">銘柄情報を編集</h3>
+    <div class="field">
+      <label>銘柄コード（変更不可）</label>
+      <input type="text" id="ehCode" disabled>
+    </div>
+    <div class="field">
+      <label>銘柄名</label>
+      <input type="text" id="ehName" placeholder="三菱UFJ">
+    </div>
+    <div class="field">
+      <label>証券口座</label>
+      <select id="ehAccount">
+        <option value="特定口座">特定口座（源泉 20.315%）</option>
+        <option value="NISA(成長枠)">NISA 成長投資枠（非課税）</option>
+        <option value="一般口座">一般口座（確定申告 20.315%）</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>平均取得単価（円）</label>
+      <input type="number" id="ehPrice" placeholder="2800">
+    </div>
+    <div class="field">
+      <label>保有株数</label>
+      <input type="number" id="ehShares" placeholder="100" min="1">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="confirmEditHolding()">保存</button>
+      <button class="btn-cancel" onclick="closeEditHolding()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const OWNER = 'aiueo2940819ai-ship-it';
 const REPO  = 'stock-advisor';
 const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/portfolio.json`;
 const TAX   = 0.20315;
-const NISA  = ['NISA(一般)', 'NISA(成長枠)'];
+const NISA  = ['NISA(成長枠)'];
 
 let fileSha      = null;
 let portfolio    = null;
@@ -291,9 +312,7 @@ function uid() { return String(Date.now()) + Math.random().toString(36).slice(2,
 
 // ── フォーム描画 ──────────────────────────────────────────────────────────────
 function renderForm() {
-  document.getElementById('cashJpy').value  = portfolio.cash_jpy || 0;
-  document.getElementById('maxRatio').value = Math.round((portfolio.max_single_stock_ratio || 0.15) * 100);
-  document.getElementById('stopLoss').value = Math.round((portfolio.stop_loss_ratio || -0.08) * 100);
+  document.getElementById('cashJpy').value = portfolio.cash_jpy || 0;
   renderHoldings();
   updateTotal();
 }
@@ -333,6 +352,7 @@ function makeCard(h) {
     <div class="holding-actions">
       <button class="btn-action btn-buy-sm"  onclick="openBuyMore('${h.code}')">＋ 追加購入</button>
       <button class="btn-action btn-sell-sm" onclick="openSellModal('${h.code}')">売却</button>
+      <button class="btn-action btn-edit-sm" onclick="openEditHolding('${h.code}')">編集</button>
       <button class="btn-action btn-del-sm"  onclick="removeHolding('${h.code}')">削除</button>
     </div>`;
   return div;
@@ -419,6 +439,40 @@ function confirmAdd() {
   savePortfolio('auto');
 }
 
+// ── 保有銘柄 編集モーダル ────────────────────────────────────────────────────
+function openEditHolding(code) {
+  const h = (portfolio.holdings||[]).find(x=>x.code===code);
+  if (!h) return;
+  document.getElementById('editHoldingTitle').textContent = `${h.code} ${h.name} を編集`;
+  document.getElementById('ehCode').value    = h.code;
+  document.getElementById('ehName').value    = h.name;
+  document.getElementById('ehAccount').value = h.account || '特定口座';
+  document.getElementById('ehPrice').value   = h.buy_price || '';
+  document.getElementById('ehShares').value  = h.shares || '';
+  document.getElementById('editHoldingOverlay').classList.add('open');
+}
+
+function closeEditHolding() { document.getElementById('editHoldingOverlay').classList.remove('open'); }
+function onEditHoldingOverlay(e) { if (e.target===document.getElementById('editHoldingOverlay')) closeEditHolding(); }
+
+function confirmEditHolding() {
+  const code   = document.getElementById('ehCode').value;
+  const h      = (portfolio.holdings||[]).find(x=>x.code===code);
+  if (!h) return;
+  const name   = document.getElementById('ehName').value.trim() || h.name;
+  const acnt   = document.getElementById('ehAccount').value;
+  const price  = parseFloat(document.getElementById('ehPrice').value);
+  const shares = parseFloat(document.getElementById('ehShares').value);
+  if (!name) { alert('銘柄名を入力してください'); return; }
+  h.name    = name;
+  h.account = acnt;
+  if (!isNaN(price)  && price > 0)  h.buy_price = price;
+  if (!isNaN(shares) && shares > 0) h.shares    = shares;
+  closeEditHolding();
+  renderHoldings(); updateTotal();
+  savePortfolio('auto');
+}
+
 // ── 売却モーダル ──────────────────────────────────────────────────────────────
 function openSellModal(code) {
   const h = (portfolio.holdings||[]).find(x=>x.code===code);
@@ -494,9 +548,8 @@ async function savePortfolio(mode = 'manual') {
   const token = getToken();
   if (!token) return alert('トークンが見つかりません');
 
-  portfolio.cash_jpy               = parseFloat(document.getElementById('cashJpy').value) || 0;
-  portfolio.max_single_stock_ratio = (parseFloat(document.getElementById('maxRatio').value) || 15) / 100;
-  portfolio.stop_loss_ratio        = (parseFloat(document.getElementById('stopLoss').value) || -8) / 100;
+  portfolio.cash_jpy = parseFloat(document.getElementById('cashJpy').value) || 0;
+  // max_single_stock_ratio / stop_loss_ratio はPythonバックエンド用に既存値を維持
 
   const json    = JSON.stringify(portfolio, null, 2) + '\n';
   const content = btoa(unescape(encodeURIComponent(json)));
