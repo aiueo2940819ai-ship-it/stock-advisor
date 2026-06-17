@@ -22,7 +22,7 @@ input[type=text], input[type=number], input[type=date], select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: #4CAF50; background: white; }
 input[type=password] { width: 100%; padding: 11px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; background: #fafafa; }
-textarea { resize: none; height: 58px; }
+textarea { resize: none; height: 52px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .field { margin-bottom: 10px; }
 
@@ -65,6 +65,16 @@ textarea { resize: none; height: 58px; }
   background: white; font-size: 12px; font-weight: 600; cursor: pointer; color: #888; transition: all 0.2s; }
 .period-tab.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
 
+/* 含み損益 */
+.holding-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+.holding-row:last-child { border-bottom:none; }
+.holding-info { flex:1; }
+.holding-name { font-size:13px; font-weight:600; }
+.holding-sub  { font-size:11px; color:#888; margin-top:2px; }
+.holding-pnl  { text-align:right; }
+.holding-pct  { font-size:13px; font-weight:700; }
+.holding-amt  { font-size:11px; color:#888; margin-top:2px; }
+
 /* 取引履歴 */
 details { margin-bottom: 6px; }
 details > summary {
@@ -86,34 +96,15 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 .trade-table tr:last-child td { border-bottom: none; }
 
 .badge { display: inline-block; padding: 2px 6px; border-radius: 5px; font-size: 10px; font-weight: 700; }
-.badge-buy     { background: #e3f2fd; color: #1565c0; }
-.badge-sell    { background: #fce4ec; color: #c62828; }
-.badge-partial { background: #fff3e0; color: #e65100; }
-.badge-acnt    { background: #f5f5f5; color: #888; font-size: 10px; }
-.badge-nisa    { background: #e8f5e9; color: #2e7d32; }
-
-.archive-row { display: flex; justify-content: space-between; align-items: center;
-  padding: 11px 14px; background: #fafafa; border: 1px dashed #ddd; border-radius: 10px;
-  margin-bottom: 6px; font-size: 13px; color: #aaa; }
+.badge-acnt { background: #f5f5f5; color: #888; }
+.badge-nisa { background: #e8f5e9; color: #2e7d32; }
 
 .btn-sm { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
   cursor: pointer; border: none; margin-left: 3px; }
 .btn-edit { background: #e3f2fd; color: #1565c0; }
 .btn-del  { background: #ffebee; color: #c62828; }
 
-.holding-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f5; }
-.holding-row:last-child { border-bottom:none; }
-.holding-info { flex:1; }
-.holding-name { font-size:13px; font-weight:600; }
-.holding-sub  { font-size:11px; color:#888; margin-top:2px; }
-.holding-pnl  { text-align:right; }
-.holding-pct  { font-size:13px; font-weight:700; }
-.holding-amt  { font-size:11px; color:#888; margin-top:2px; }
-
-.btn-archive { width: 100%; padding: 11px; background: #fff8e1; border: 1.5px solid #ffe082;
-  color: #f57f17; font-size: 13px; font-weight: 600; border-radius: 12px; cursor: pointer; }
-
-/* モーダル */
+/* モーダル（売却編集） */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
   display: none; align-items: flex-end; justify-content: center; }
 .modal-overlay.open { display: flex; }
@@ -124,6 +115,7 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 .btn-save   { background: #4CAF50; color: white; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
 .btn-cancel { background: #f5f5f5; color: #555; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
 .pnl-preview { font-size: 13px; background: #f8f9fa; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.hint { font-size: 11px; color: #aaa; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -190,100 +182,69 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
       <canvas id="chart" height="160"></canvas>
     </div>
 
-    <!-- 新規登録 -->
-    <button class="btn btn-green" onclick="openModal(null)">＋ 取引を登録</button>
-
-    <!-- 履歴 -->
+    <!-- 売却履歴 -->
     <div class="card">
-      <h2>📋 取引履歴</h2>
+      <h2>📋 売却履歴</h2>
+      <p class="hint" style="margin-bottom:10px">売却はポートフォリオページの「売却」ボタンから登録します。誤りは「編集」で修正できます。</p>
       <div id="historyContainer"></div>
     </div>
 
-    <button class="btn-archive" onclick="archiveOld()">📦 1年以上前の取引をアーカイブ（年次集計に変換）</button>
     <div class="status" id="status"></div>
   </div>
 
   <div class="spinner" id="spinner" style="display:none">読み込み中...</div>
 </div>
 
-<!-- 通常モーダル -->
-<div class="modal-overlay" id="overlay" onclick="onOverlayClick(event)">
+<!-- 売却記録 編集モーダル -->
+<div class="modal-overlay" id="editOverlay" onclick="onEditOverlay(event)">
   <div class="modal">
-    <h3 id="modalTitle">取引を登録</h3>
+    <h3 id="editTitle">売却記録を修正</h3>
     <div class="field">
-      <label>取引日</label>
-      <input type="date" id="fDate">
+      <label>売却日</label>
+      <input type="date" id="eDate">
     </div>
     <div class="grid2">
       <div class="field">
-        <label>銘柄コード</label>
-        <input type="text" id="fCode" placeholder="8306" oninput="onCodeInput()">
+        <label>売却株数</label>
+        <input type="number" id="eShares" min="1" oninput="previewEdit()">
       </div>
       <div class="field">
-        <label>銘柄名</label>
-        <input type="text" id="fName" placeholder="三菱UFJ">
+        <label>売却単価（円）</label>
+        <input type="number" id="ePrice" oninput="previewEdit()">
       </div>
     </div>
     <div class="field">
-      <label>取引区分</label>
-      <select id="fType" onchange="onTypeChange()">
-        <option value="buy">買い</option>
-        <option value="sell">売り（全株）</option>
-        <option value="sell_partial">売り（一部）</option>
-      </select>
+      <label>平均取得単価（円）</label>
+      <input type="number" id="eAvgBuy" oninput="previewEdit()">
+      <div class="hint">修正すると損益が再計算されます</div>
     </div>
-    <div class="grid2">
-      <div class="field">
-        <label>株数</label>
-        <input type="number" id="fShares" placeholder="100" min="1" oninput="previewPnl()">
-      </div>
-      <div class="field">
-        <label>取引単価（円/株）</label>
-        <input type="number" id="fPrice" placeholder="3000" oninput="previewPnl()">
-      </div>
-    </div>
-    <div id="avgBuyWrap" style="display:none">
-      <div class="field">
-        <label>平均取得単価（円/株）</label>
-        <input type="number" id="fAvgBuy" placeholder="2865" oninput="previewPnl()">
-      </div>
-      <div class="pnl-preview" id="pnlPreview" style="display:none"></div>
-    </div>
-    <div class="field">
-      <label>証券口座</label>
-      <select id="fAccount" onchange="previewPnl()">
-        <option value="特定口座">特定口座（源泉 20.315%）</option>
-        <option value="NISA(一般)">NISA 一般枠（非課税）</option>
-        <option value="NISA(成長枠)">NISA 成長投資枠（非課税）</option>
-        <option value="一般口座">一般口座（確定申告 20.315%）</option>
-      </select>
-    </div>
+    <div class="pnl-preview" id="ePnlPreview" style="display:none"></div>
     <div class="field">
       <label>メモ（任意）</label>
-      <textarea id="fMemo" placeholder="例: 決算後の押し目、劇おすすめ入り"></textarea>
+      <textarea id="eMemo"></textarea>
     </div>
     <div class="modal-btns">
-      <button class="btn-save"   onclick="saveTrade()">保存</button>
-      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-save"   onclick="saveEdit()">保存</button>
+      <button class="btn-cancel" onclick="closeEditModal()">キャンセル</button>
     </div>
   </div>
 </div>
 
 <script>
-const OWNER      = 'aiueo2940819ai-ship-it';
-const REPO       = 'stock-advisor';
-const TRADE_API  = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/trades.json`;
-const PORTF_API  = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/portfolio.json`;
-const TAX       = 0.20315;
-const NISA      = ['NISA(一般)', 'NISA(成長枠)'];
+const OWNER    = 'aiueo2940819ai-ship-it';
+const REPO     = 'stock-advisor';
+const PORTF_API= `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/portfolio.json`;
+const TAX      = 0.20315;
+const NISA     = ['NISA(一般)', 'NISA(成長枠)'];
 
-let sha       = null;
-let db        = { trades: [], archives: {} };
-let editId    = null;
+let portfSha = null;
+let portfolio = null;  // full portfolio object
 let chartObj  = null;
 let period    = 'cumulative';
+let editId    = null;
 
-// ── 認証 ──────────────────────────────────────────────────────────────────────
+function sells() { return portfolio?.sell_history || []; }
+
 function getToken() { return localStorage.getItem('gh_pat') || ''; }
 function saveToken() {
   const t = document.getElementById('tokenInput').value.trim();
@@ -304,25 +265,13 @@ async function init() {
   document.getElementById('tokenCard').style.display = 'none';
   document.getElementById('spinner').style.display   = 'block';
   try {
-    const hdr = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' };
-    const [tradeRes, portfRes] = await Promise.all([
-      fetch(TRADE_API, { headers: hdr }),
-      fetch(PORTF_API, { headers: hdr }),
-    ]);
-    if (tradeRes.status === 404) {
-      db = { trades: [], archives: {} }; sha = null;
-    } else {
-      const data = await tradeRes.json();
-      if (!tradeRes.ok) throw new Error(data.message);
-      sha = data.sha;
-      db  = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
-      if (!db.archives) db.archives = {};
-    }
-    if (portfRes.ok) {
-      const pd = await portfRes.json();
-      const pf = JSON.parse(decodeURIComponent(escape(atob(pd.content.replace(/\n/g,'')))));
-      renderUnrealized(pf.holdings || []);
-    }
+    const res  = await fetch(PORTF_API, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    portfSha = data.sha;
+    portfolio = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+    if (!portfolio.sell_history) portfolio.sell_history = [];
+    renderUnrealized(portfolio.holdings || []);
     renderAll();
     document.getElementById('spinner').style.display     = 'none';
     document.getElementById('mainContent').style.display = 'block';
@@ -333,21 +282,18 @@ async function init() {
   }
 }
 
+// ── 含み損益 ──────────────────────────────────────────────────────────────────
 function renderUnrealized(holdings) {
   const card = document.getElementById('unrealizedCard');
   const list = document.getElementById('unrealizedList');
   const hasCurrent = holdings.some(h => h.current_price != null);
   if (!holdings.length || !hasCurrent) { card.style.display='none'; return; }
-
-  let totalUnreal = 0;
-  let html = '';
+  let totalUnreal = 0, html = '';
   for (const h of holdings) {
-    const cur  = h.current_price;
-    const buy  = h.buy_price;
-    const sh   = h.shares || 0;
+    const cur = h.current_price, buy = h.buy_price, sh = h.shares||0;
     if (!cur || !buy || !sh) continue;
-    const pnl  = Math.round((cur - buy) * sh);
-    const pct  = ((cur - buy) / buy * 100).toFixed(1);
+    const pnl = Math.round((cur - buy) * sh);
+    const pct = ((cur - buy) / buy * 100).toFixed(1);
     const sign = pnl >= 0 ? '+' : '';
     totalUnreal += pnl;
     html += `<div class="holding-row">
@@ -365,15 +311,13 @@ function renderUnrealized(holdings) {
   list.innerHTML = html;
   const tot = document.getElementById('unrealizedTotal');
   tot.textContent = (totalUnreal>=0?'+':'') + totalUnreal.toLocaleString('ja-JP') + '円';
-  tot.className = 'summary-value ' + cls(totalUnreal);
+  tot.className   = 'summary-value ' + cls(totalUnreal);
   card.style.display = 'block';
 }
 
 // ── ヘルパー ──────────────────────────────────────────────────────────────────
-const isSell  = t => t.type === 'sell' || t.type === 'sell_partial';
-const taxRate = acnt => NISA.includes(acnt) ? 0 : TAX;
-const fmt     = v => v == null || isNaN(v) ? '―' : (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('ja-JP') + '円';
-const cls     = v => v == null || isNaN(v) || v === 0 ? 'zero' : v > 0 ? 'plus' : 'minus';
+const fmt = v => v==null||isNaN(v) ? '―' : (v>=0?'+':'') + Math.round(v).toLocaleString('ja-JP') + '円';
+const cls = v => v==null||isNaN(v)||v===0 ? 'zero' : v>0 ? 'plus' : 'minus';
 function weekStart(d) {
   const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay());
   return dt.toISOString().slice(0,10);
@@ -381,17 +325,13 @@ function weekStart(d) {
 
 // ── 集計 ─────────────────────────────────────────────────────────────────────
 function calcSummary() {
-  const today  = new Date();
-  const yyyyMM = today.toISOString().slice(0,7);
-  const wStart = weekStart(today);
+  const todayStr = new Date().toISOString();
+  const yyyyMM   = todayStr.slice(0,7);
+  const wStart   = weekStart(new Date());
   let total=0, tat=0, mo=0, wk=0;
-  for (const yr in db.archives) {
-    total += db.archives[yr].realized_pnl          || 0;
-    tat   += db.archives[yr].realized_pnl_after_tax|| 0;
-  }
-  for (const t of db.trades) {
-    if (!isSell(t) || t.realized_pnl == null) continue;
-    const rat = t.realized_pnl_after_tax ?? Math.round(t.realized_pnl * (1 - taxRate(t.account)));
+  for (const t of sells()) {
+    if (t.realized_pnl == null) continue;
+    const rat = t.realized_pnl_after_tax ?? Math.round(t.realized_pnl * (1 - (NISA.includes(t.account)?0:TAX)));
     total += t.realized_pnl; tat += rat;
     if (t.date.slice(0,7) === yyyyMM) mo += t.realized_pnl;
     if (t.date >= wStart)             wk += t.realized_pnl;
@@ -401,25 +341,25 @@ function calcSummary() {
 
 // ── チャート ──────────────────────────────────────────────────────────────────
 function buildChartData() {
-  const sells = db.trades.filter(t => isSell(t) && t.realized_pnl != null).sort((a,b) => a.date.localeCompare(b.date));
+  const data_sells = sells().filter(t => t.realized_pnl != null).sort((a,b) => a.date.localeCompare(b.date));
   if (period === 'cumulative') {
-    let cum = Object.values(db.archives).reduce((s,a) => s + (a.realized_pnl||0), 0);
+    let cum = 0;
     const labels=[], data=[];
-    for (const t of sells) { cum += t.realized_pnl; labels.push(t.date.slice(5)); data.push(cum); }
-    if (!labels.length) { labels.push('取引なし'); data.push(0); }
+    for (const t of data_sells) { cum += t.realized_pnl; labels.push(t.date.slice(5)); data.push(cum); }
+    if (!labels.length) { labels.push('売却なし'); data.push(0); }
     return { labels, data, type:'line' };
   }
   const buckets={};
-  for (const t of sells) {
+  for (const t of data_sells) {
     const k = period==='monthly' ? t.date.slice(0,7) : period==='weekly' ? weekStart(t.date) : t.date;
     buckets[k] = (buckets[k]||0) + t.realized_pnl;
   }
   const n    = period==='daily' ? 30 : period==='weekly' ? 12 : 24;
   const keys = Object.keys(buckets).sort().slice(-n);
   const labels = keys.map(k => period==='monthly' ? k.slice(2) : k.slice(5));
-  const data   = keys.map(k => buckets[k]);
-  if (!labels.length) { labels.push('取引なし'); data.push(0); }
-  return { labels, data, type:'bar' };
+  const vals   = keys.map(k => buckets[k]);
+  if (!labels.length) { labels.push('売却なし'); vals.push(0); }
+  return { labels, data: vals, type:'bar' };
 }
 
 function renderChart() {
@@ -430,19 +370,14 @@ function renderChart() {
   if (chartObj) chartObj.destroy();
   chartObj = new Chart(ctx, {
     type,
-    data: { labels, datasets: [{
-      data,
+    data: { labels, datasets: [{ data,
       backgroundColor: type==='line' ? 'rgba(26,26,46,0.07)' : bg,
       borderColor:     type==='line' ? '#1a1a2e' : bd,
-      borderWidth: type==='line' ? 2 : 1,
-      pointRadius: 3, fill: type==='line', tension: 0.3,
+      borderWidth: type==='line' ? 2 : 1, pointRadius: 3, fill: type==='line', tension: 0.3,
     }]},
     options: {
       responsive: true,
-      plugins: {
-        legend: { display:false },
-        tooltip: { callbacks: { label: c => fmt(c.raw) } }
-      },
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>fmt(c.raw)}} },
       scales: { y: { ticks: { callback: v => (v>=0?'+':'') + (v/10000).toFixed(0)+'万' } } }
     }
   });
@@ -457,233 +392,146 @@ function switchPeriod(btn) {
 
 // ── 履歴レンダリング ──────────────────────────────────────────────────────────
 function renderHistory() {
-  const trades = [...db.trades].sort((a,b) => b.date.localeCompare(a.date));
-  const byYear={};
-  for (const t of trades) {
+  const sorted = [...sells()].sort((a,b) => b.date.localeCompare(a.date));
+  const byYear = {};
+  for (const t of sorted) {
     const yr=t.date.slice(0,4), mo=t.date.slice(0,7);
-    if (!byYear[yr]) byYear[yr]={};
-    if (!byYear[yr][mo]) byYear[yr][mo]=[];
+    if (!byYear[yr]) byYear[yr] = {};
+    if (!byYear[yr][mo]) byYear[yr][mo] = [];
     byYear[yr][mo].push(t);
   }
-  let html='';
-  // アーカイブ行
-  for (const yr of Object.keys(db.archives).sort().reverse()) {
-    const a=db.archives[yr];
-    html+=`<div class="archive-row">
-      <span>📦 ${yr}年（アーカイブ）</span>
-      <span style="font-weight:700;font-size:13px" class="${cls(a.realized_pnl)}">${fmt(a.realized_pnl)}</span>
-    </div>`;
-  }
-  // 年/月 展開
+  let html = '';
   for (const yr of Object.keys(byYear).sort().reverse()) {
-    const yrPnl=trades.filter(t=>t.date.startsWith(yr)&&isSell(t)).reduce((s,t)=>s+(t.realized_pnl||0),0);
-    html+=`<details open><summary class="year-summary">
+    const yrPnl = sorted.filter(t=>t.date.startsWith(yr)).reduce((s,t)=>s+(t.realized_pnl||0),0);
+    html += `<details open><summary class="year-summary">
       <span>📅 ${yr}年</span>
       <span><span class="${cls(yrPnl)}">${fmt(yrPnl)}</span><span class="arrow">▶</span></span>
     </summary>`;
     for (const mo of Object.keys(byYear[yr]).sort().reverse()) {
-      const moPnl=byYear[yr][mo].filter(t=>isSell(t)).reduce((s,t)=>s+(t.realized_pnl||0),0);
-      html+=`<div class="month-block"><details><summary class="month-summary">
+      const moPnl = byYear[yr][mo].reduce((s,t)=>s+(t.realized_pnl||0),0);
+      html += `<div class="month-block"><details><summary class="month-summary">
         <span>${parseInt(mo.slice(5))}月</span>
         <span><span class="${cls(moPnl)}">${fmt(moPnl)}</span><span class="arrow">▶</span></span>
       </summary>
       <div style="overflow-x:auto">
       <table class="trade-table"><thead><tr>
-        <th>日付</th><th>銘柄</th><th>区分</th><th>株数</th><th>単価</th><th>損益（税前）</th><th>口座</th><th></th>
+        <th>日付</th><th>銘柄</th><th>株数</th><th>売値</th><th>取得単価</th><th>損益（税前）</th><th>口座</th><th></th>
       </tr></thead><tbody>`;
       for (const t of byYear[yr][mo]) {
-        const lbl  = t.type==='buy'?'買い':t.type==='sell_partial'?'一部売':'売り';
-        const bcls = t.type==='buy'?'badge-buy':t.type==='sell_partial'?'badge-partial':'badge-sell';
-        const acls = NISA.includes(t.account)?'badge-nisa':'badge-acnt';
-        const pnlStr = isSell(t)&&t.realized_pnl!=null ? `<span class="${cls(t.realized_pnl)}">${fmt(t.realized_pnl)}</span>` : '―';
-        html+=`<tr>
+        const acls = NISA.includes(t.account) ? 'badge-nisa' : 'badge-acnt';
+        html += `<tr>
           <td style="white-space:nowrap">${t.date.slice(5)}</td>
           <td><b>${t.code}</b><br><span style="color:#999;font-size:10px">${t.name}</span></td>
-          <td><span class="badge ${bcls}">${lbl}</span></td>
-          <td>${t.shares}株</td>
-          <td>${(t.price||0).toLocaleString('ja-JP')}円</td>
-          <td>${pnlStr}</td>
+          <td>${(t.shares||0).toLocaleString()}株</td>
+          <td>${(t.sell_price||0).toLocaleString()}円</td>
+          <td style="color:#888">${(t.avg_buy_price||0).toLocaleString()}円</td>
+          <td><span class="${cls(t.realized_pnl)}">${fmt(t.realized_pnl)}</span></td>
           <td><span class="badge ${acls}">${t.account}</span></td>
           <td style="white-space:nowrap">
-            <button class="btn-sm btn-edit" onclick="openModal('${t.id}')">編集</button>
-            <button class="btn-sm btn-del"  onclick="delTrade('${t.id}')">削除</button>
+            <button class="btn-sm btn-edit" onclick="openEdit('${t.id}')">編集</button>
+            <button class="btn-sm btn-del"  onclick="delSell('${t.id}')">削除</button>
           </td>
         </tr>`;
       }
-      html+=`</tbody></table></div></details></div>`;
+      html += `</tbody></table></div></details></div>`;
     }
-    html+=`</details>`;
+    html += `</details>`;
   }
-  if (!html) html='<div style="text-align:center;color:#bbb;padding:24px;font-size:14px">取引記録がありません<br>「＋ 取引を登録」から追加してください</div>';
-  document.getElementById('historyContainer').innerHTML=html;
+  if (!html) html = '<div style="text-align:center;color:#bbb;padding:24px;font-size:14px">売却記録がありません<br>ポートフォリオページの「売却」ボタンから登録してください</div>';
+  document.getElementById('historyContainer').innerHTML = html;
 }
 
 function renderAll() {
-  const s=calcSummary();
-  const setSV=(id,v)=>{ const el=document.getElementById(id); el.textContent=fmt(v); el.className='summary-value '+cls(v); };
-  setSV('sTotalPnl',s.total); setSV('sTotalAfterTax',s.tat); setSV('sMonthPnl',s.mo); setSV('sWeekPnl',s.wk);
+  const s = calcSummary();
+  const setSV = (id, v) => { const el=document.getElementById(id); el.textContent=fmt(v); el.className='summary-value '+cls(v); };
+  setSV('sTotalPnl', s.total); setSV('sTotalAfterTax', s.tat); setSV('sMonthPnl', s.mo); setSV('sWeekPnl', s.wk);
   renderChart();
   renderHistory();
 }
 
-// ── モーダル ──────────────────────────────────────────────────────────────────
-function openModal(id) {
-  editId=id;
-  const today=new Date().toISOString().slice(0,10);
-  if (id) {
-    const t=db.trades.find(x=>x.id===id);
-    if(!t) return;
-    document.getElementById('modalTitle').textContent='取引を編集';
-    document.getElementById('fDate').value    = t.date;
-    document.getElementById('fCode').value    = t.code;
-    document.getElementById('fName').value    = t.name;
-    document.getElementById('fType').value    = t.type;
-    document.getElementById('fShares').value  = t.shares;
-    document.getElementById('fPrice').value   = t.price;
-    document.getElementById('fAvgBuy').value  = t.avg_buy_price||'';
-    document.getElementById('fAccount').value = t.account;
-    document.getElementById('fMemo').value    = t.memo||'';
-  } else {
-    document.getElementById('modalTitle').textContent='取引を登録';
-    ['fCode','fName','fShares','fPrice','fAvgBuy','fMemo'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('fDate').value    = today;
-    document.getElementById('fType').value    = 'buy';
-    document.getElementById('fAccount').value = '特定口座';
-  }
-  onTypeChange(); previewPnl();
-  document.getElementById('overlay').classList.add('open');
-}
-function closeModal() { document.getElementById('overlay').classList.remove('open'); editId=null; }
-function onOverlayClick(e) { if(e.target===document.getElementById('overlay')) closeModal(); }
-
-function onTypeChange() {
-  const sell=isSell({type:document.getElementById('fType').value});
-  document.getElementById('avgBuyWrap').style.display=sell?'block':'none';
-  if(sell) {
-    const code=document.getElementById('fCode').value.trim();
-    if(code) {
-      const avg=calcAvgBuy(code);
-      if(avg && !document.getElementById('fAvgBuy').value) document.getElementById('fAvgBuy').value=Math.round(avg);
-    }
-    previewPnl();
-  }
+// ── 売却記録 編集モーダル ─────────────────────────────────────────────────────
+function openEdit(id) {
+  const t = sells().find(x=>x.id===id);
+  if (!t) return;
+  editId = id;
+  document.getElementById('editTitle').textContent = `${t.code} ${t.name} の売却記録を修正`;
+  document.getElementById('eDate').value   = t.date;
+  document.getElementById('eShares').value = t.shares;
+  document.getElementById('ePrice').value  = t.sell_price;
+  document.getElementById('eAvgBuy').value = t.avg_buy_price;
+  document.getElementById('eMemo').value   = t.memo||'';
+  previewEdit();
+  document.getElementById('editOverlay').classList.add('open');
 }
 
-function onCodeInput() {
-  const code=document.getElementById('fCode').value.trim();
-  const prev=db.trades.find(t=>t.code===code);
-  if(prev && !document.getElementById('fName').value) document.getElementById('fName').value=prev.name;
-  onTypeChange();
+function closeEditModal() { document.getElementById('editOverlay').classList.remove('open'); editId=null; }
+function onEditOverlay(e) { if(e.target===document.getElementById('editOverlay')) closeEditModal(); }
+
+function previewEdit() {
+  const s   = parseFloat(document.getElementById('eShares').value)||0;
+  const p   = parseFloat(document.getElementById('ePrice').value)||0;
+  const ab  = parseFloat(document.getElementById('eAvgBuy').value)||0;
+  const t   = sells().find(x=>x.id===editId);
+  const el  = document.getElementById('ePnlPreview');
+  if (!s||!p||!ab||!t) { el.style.display='none'; return; }
+  const pnl    = Math.round((p-ab)*s);
+  const isNisa = NISA.includes(t.account);
+  const pat    = isNisa ? pnl : Math.round(pnl*(1-TAX));
+  el.innerHTML = `損益（税前）: <b class="${cls(pnl)}">${fmt(pnl)}</b>　${isNisa?'NISA非課税':`税引後: <b class="${cls(pat)}">${fmt(pat)}</b>`}`;
+  el.style.display = 'block';
 }
 
-function calcAvgBuy(code) {
-  const buys=db.trades.filter(t=>t.code===code&&t.type==='buy'&&t.id!==editId);
-  if(!buys.length) return null;
-  const ts=buys.reduce((s,t)=>s+t.shares,0);
-  const tc=buys.reduce((s,t)=>s+t.shares*t.price,0);
-  return ts>0?tc/ts:null;
+async function saveEdit() {
+  const t = sells().find(x=>x.id===editId);
+  if (!t) return;
+  const date   = document.getElementById('eDate').value;
+  const shares = parseFloat(document.getElementById('eShares').value)||0;
+  const price  = parseFloat(document.getElementById('ePrice').value)||0;
+  const avgBuy = parseFloat(document.getElementById('eAvgBuy').value)||0;
+  const memo   = document.getElementById('eMemo').value.trim();
+  if (!date||!shares||!price||!avgBuy) { alert('全項目を入力してください'); return; }
+
+  const pnl    = Math.round((price-avgBuy)*shares);
+  const isNisa = NISA.includes(t.account);
+  const pnlAft = isNisa ? pnl : Math.round(pnl*(1-TAX));
+
+  Object.assign(t, { date, shares, sell_price: price, avg_buy_price: avgBuy, memo, realized_pnl: pnl, realized_pnl_after_tax: pnlAft });
+  closeEditModal();
+  await persist('修正しました ✅');
 }
 
-function previewPnl() {
-  const type=document.getElementById('fType').value;
-  const s=parseFloat(document.getElementById('fShares').value)||0;
-  const p=parseFloat(document.getElementById('fPrice').value)||0;
-  const ab=parseFloat(document.getElementById('fAvgBuy').value)||0;
-  const acnt=document.getElementById('fAccount').value;
-  const el=document.getElementById('pnlPreview');
-  if(!isSell({type})||!s||!p||!ab){ el.style.display='none'; return; }
-  const pnl=Math.round((p-ab)*s);
-  const pat=Math.round(pnl*(1-taxRate(acnt)));
-  const taxNote=NISA.includes(acnt)?'NISA非課税':`税引後: <b class="${cls(pat)}">${fmt(pat)}</b>`;
-  el.style.display='block';
-  el.innerHTML=`概算損益（税前）: <b class="${cls(pnl)}">${fmt(pnl)}</b> ／ ${taxNote}`;
-}
-
-async function saveTrade() {
-  const date=document.getElementById('fDate').value;
-  const code=document.getElementById('fCode').value.trim();
-  const name=document.getElementById('fName').value.trim()||code;
-  const type=document.getElementById('fType').value;
-  const shares=parseFloat(document.getElementById('fShares').value);
-  const price=parseFloat(document.getElementById('fPrice').value);
-  const avgBuy=parseFloat(document.getElementById('fAvgBuy').value)||null;
-  const account=document.getElementById('fAccount').value;
-  const memo=document.getElementById('fMemo').value.trim();
-
-  if(!date||!code||!shares||!price) { alert('日付・銘柄コード・株数・単価は必須です'); return; }
-  if(isSell({type})&&!avgBuy) { alert('売り取引には平均取得単価が必要です'); return; }
-
-  const pnl    = isSell({type}) ? Math.round((price-avgBuy)*shares) : null;
-  const pnlAft = pnl!=null ? Math.round(pnl*(1-taxRate(account))) : null;
-
-  const trade={
-    id: editId||String(Date.now()),
-    date,code,name,type,shares,price,account,memo,
-    avg_buy_price: avgBuy,
-    realized_pnl: pnl,
-    realized_pnl_after_tax: pnlAft,
-  };
-
-  if(editId) {
-    const i=db.trades.findIndex(t=>t.id===editId);
-    if(i>=0) db.trades[i]=trade;
-  } else {
-    db.trades.push(trade);
-  }
-  closeModal();
-  await persist('取引を保存しました ✅');
-}
-
-async function delTrade(id) {
-  if(!confirm('この取引を削除しますか？')) return;
-  db.trades=db.trades.filter(t=>t.id!==id);
+async function delSell(id) {
+  const t = sells().find(x=>x.id===id);
+  if (!confirm(`${t?.name||id} の売却記録を削除しますか？`)) return;
+  portfolio.sell_history = portfolio.sell_history.filter(x=>x.id!==id);
   await persist('削除しました');
-}
-
-async function archiveOld() {
-  const cutoff=new Date(); cutoff.setFullYear(cutoff.getFullYear()-1);
-  const cut=cutoff.toISOString().slice(0,10);
-  const old=db.trades.filter(t=>t.date<cut);
-  if(!old.length){ alert('アーカイブ対象（1年以上前）の取引はありません'); return; }
-  if(!confirm(`${old.length}件の取引を年次集計に変換してアーカイブしますか？\n個別明細は削除されます。`)) return;
-  for(const t of old) {
-    if(!isSell(t)||t.realized_pnl==null) continue;
-    const yr=t.date.slice(0,4);
-    if(!db.archives[yr]) db.archives[yr]={realized_pnl:0,realized_pnl_after_tax:0,trade_count:0,archived_at:''};
-    db.archives[yr].realized_pnl          +=t.realized_pnl;
-    db.archives[yr].realized_pnl_after_tax+=t.realized_pnl_after_tax||0;
-    db.archives[yr].trade_count++;
-    db.archives[yr].archived_at=new Date().toISOString().slice(0,10);
-  }
-  db.trades=db.trades.filter(t=>t.date>=cut);
-  await persist(`${old.length}件をアーカイブしました ✅`);
 }
 
 // ── GitHub保存 ────────────────────────────────────────────────────────────────
 async function persist(msg) {
-  const token=getToken();
-  const json=JSON.stringify(db,null,2)+'\n';
-  const content=btoa(unescape(encodeURIComponent(json)));
-  const body={message:`取引履歴更新 ${new Date().toLocaleDateString('ja-JP')}`,content};
-  if(sha) body.sha=sha;
-  const st=document.getElementById('status');
+  const token   = getToken();
+  const json    = JSON.stringify(portfolio, null, 2) + '\n';
+  const content = btoa(unescape(encodeURIComponent(json)));
+  const body    = { message: `損益更新 ${new Date().toLocaleDateString('ja-JP')}`, content, sha: portfSha };
+  const st = document.getElementById('status');
   st.className='status'; st.textContent='保存中...'; st.style.display='block';
   try {
-    const res=await fetch(TRADE_API,{
+    const res  = await fetch(PORTF_API, {
       method:'PUT',
-      headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json',Accept:'application/vnd.github+json'},
-      body:JSON.stringify(body),
+      headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json', Accept:'application/vnd.github+json' },
+      body: JSON.stringify(body),
     });
-    const data=await res.json();
-    if(!res.ok) throw new Error(data.message);
-    sha=data.content.sha;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+    portfSha = data.content.sha;
     st.className='status ok'; st.textContent=msg;
     renderAll();
   } catch(e) {
     st.className='status err'; st.textContent='❌ 保存失敗: '+e.message;
   }
 }
-window.onload=init;
+
+window.onload = init;
 </script>
 </body>
 </html>
