@@ -74,6 +74,28 @@ def update_highest_prices(portfolio: dict, stock_map: dict) -> None:
                       f"(ATR止め:{atr_stop:.0f} / ハード:{hard_stop:.0f})")
         h["stop_price"] = (saved_h or {}).get("stop_price")
 
+        # ── トレイリングストップの自動引き上げ ──
+        # 含み益の最高値水準に応じて stop_price を段階的に引き上げる（絶対に下げない）
+        if saved_h is not None and saved_h.get("stop_price") is not None and buy:
+            high_now     = h["highest_price"] or buy
+            current_stop = saved_h["stop_price"]
+            new_stop     = current_stop
+
+            if   high_now >= buy * 1.20:
+                new_stop = max(current_stop, round(buy * 1.12, 0))
+            elif high_now >= buy * 1.15:
+                new_stop = max(current_stop, round(buy * 1.07, 0))
+            elif high_now >= buy * 1.10:
+                new_stop = max(current_stop, round(buy * 1.03, 0))
+
+            if new_stop != current_stop:
+                saved_h["stop_price"] = new_stop
+                h["stop_price"]       = new_stop
+                file_changed = True
+                print(f"  {code} トレイリングストップ引き上げ: "
+                      f"{current_stop:.0f}円 → {new_stop:.0f}円 "
+                      f"(最高値{high_now:.0f}円 / 買値{buy:.0f}円)")
+
         # ── 分析用フィールドをメモリ上の holdings に追記 ──
         high = h["highest_price"] or buy
         if current and buy:
