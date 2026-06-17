@@ -8,8 +8,14 @@
       "name": "三菱UFJフィナンシャル",
       "shares": 20,
       "buy_price": 2865,
-      "highest_price": 3228.0,
-      "stop_price": 2636.0
+      "highest_price": 3228,
+      "stop_price": 2636
+    },
+    {
+      "code": "3407",
+      "name": "旭化成",
+      "shares": 50,
+      "buy_price": 1755
     }
   ]
 }
