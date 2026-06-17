@@ -426,11 +426,18 @@ function updateTotal() {
   document.getElementById('totalAsset').textContent = (cash + val).toLocaleString('ja-JP') + ' 円';
 }
 
+function updateCashDisplay() {
+  document.getElementById('cashJpy').value = portfolio.cash_jpy || 0;
+  updateTotal();
+}
+
 function removeHolding(code) {
   const h = (portfolio.holdings||[]).find(x=>x.code===code);
-  if (!confirm(`${h?.name||code} を削除しますか？`)) return;
+  if (!confirm(`${h?.name||code} を削除しますか？\n現金残高に ${((h?.shares||0)*(h?.buy_price||0)).toLocaleString('ja-JP')} 円（保有株数×取得単価）を戻します`)) return;
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) + (h.shares||0) * (h.buy_price||0);
   portfolio.holdings = (portfolio.holdings||[]).filter(x=>x.code!==code);
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
+  savePortfolio('auto');
 }
 
 // ── 銘柄追加 / 追加購入 モーダル ─────────────────────────────────────────────
@@ -496,8 +503,9 @@ function confirmAdd() {
     h.lots          = [...(h.lots||[]), lot];
   }
 
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) - shares * price;
   closeAddModal();
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
   savePortfolio('auto');
 }
 
@@ -560,14 +568,17 @@ function confirmEditLot() {
   const shares = parseFloat(document.getElementById('elShares').value)||0;
   const price  = parseFloat(document.getElementById('elPrice').value)||0;
   if (!shares||!price) { alert('株数と単価は必須です'); return; }
+  const oldCost = lot.shares * lot.price;
+  const newCost = shares * price;
   const delta = shares - lot.shares;
   lot.date = date; lot.shares = shares; lot.price = price;
   h.shares = Math.max(0, h.shares + delta);
   const totalShares = (h.lots||[]).reduce((s,l)=>s+l.shares, 0);
   const totalCost   = (h.lots||[]).reduce((s,l)=>s+l.shares*l.price, 0);
   if (totalShares > 0) h.buy_price = Math.round(totalCost / totalShares);
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) - (newCost - oldCost);
   closeEditLot();
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
   savePortfolio('auto');
 }
 
@@ -575,14 +586,15 @@ function deleteLot() {
   const h = (portfolio.holdings||[]).find(x=>x.code===editLotCode);
   const lot = (h?.lots||[]).find(l=>l.id===editLotId);
   if (!lot) return;
-  if (!confirm(`${lot.date||''} ${lot.shares}株@${lot.price}円 の購入ロットを削除しますか？`)) return;
+  if (!confirm(`${lot.date||''} ${lot.shares}株@${lot.price}円 の購入ロットを削除しますか？\n現金に ${(lot.shares*lot.price).toLocaleString('ja-JP')} 円を戻します`)) return;
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) + lot.shares * lot.price;
   h.shares = Math.max(0, h.shares - lot.shares);
   h.lots = (h.lots||[]).filter(l=>l.id!==editLotId);
   const totalShares = (h.lots||[]).reduce((s,l)=>s+l.shares, 0);
   const totalCost   = (h.lots||[]).reduce((s,l)=>s+l.shares*l.price, 0);
   if (totalShares > 0) h.buy_price = Math.round(totalCost / totalShares);
   closeEditLot();
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
   savePortfolio('auto');
 }
 
@@ -623,6 +635,8 @@ function confirmEditSellChip() {
   const shares = parseFloat(document.getElementById('escShares').value)||0;
   const price  = parseFloat(document.getElementById('escPrice').value)||0;
   if (!date||!shares||!price) { alert('日付・株数・単価は必須です'); return; }
+  const oldProceeds = t.shares * t.sell_price;
+  const newProceeds = shares * price;
   const delta  = t.shares - shares;
   const pnl    = Math.round((price - t.avg_buy_price) * shares);
   const isNisa = NISA.includes(t.account);
@@ -630,21 +644,23 @@ function confirmEditSellChip() {
   // 保有中なら株数差分を反映
   const h = (portfolio.holdings||[]).find(x=>x.code===t.code);
   if (h) h.shares = Math.max(0, h.shares + delta);
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) + (newProceeds - oldProceeds);
   Object.assign(t, { date, shares, sell_price: price, realized_pnl: pnl, realized_pnl_after_tax: pnlAft });
   closeEditSellChip();
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
   savePortfolio('auto');
 }
 
 function deleteSellChip() {
   const t = (portfolio.sell_history||[]).find(x=>x.id===editSellChipId);
   if (!t) return;
-  if (!confirm(`${t.date||''} ${t.shares}株@${t.sell_price}円 の売却記録を削除しますか？\n※保有株数がその分戻ります`)) return;
+  if (!confirm(`${t.date||''} ${t.shares}株@${t.sell_price}円 の売却記録を削除しますか？\n現金から ${(t.shares*t.sell_price).toLocaleString('ja-JP')} 円を差し引きます`)) return;
   const h = (portfolio.holdings||[]).find(x=>x.code===t.code);
   if (h) h.shares = h.shares + t.shares;
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) - t.shares * t.sell_price;
   portfolio.sell_history = (portfolio.sell_history||[]).filter(x=>x.id!==editSellChipId);
   closeEditSellChip();
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
   savePortfolio('auto');
 }
 
@@ -712,9 +728,10 @@ function confirmSell() {
   if (h.shares <= 0) {
     portfolio.holdings = portfolio.holdings.filter(x=>x.code!==h.code);
   }
+  portfolio.cash_jpy = (portfolio.cash_jpy || 0) + shares * price;
 
   closeSellModal();
-  renderHoldings(); updateTotal();
+  renderHoldings(); updateCashDisplay();
   savePortfolio('auto');
 }
 
