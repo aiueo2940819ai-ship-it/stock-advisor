@@ -18,7 +18,7 @@
       ],
       "account": "NISA(成長枠)",
       "highest_price": 1790,
-      "current_price": 1790,
+      "current_price": 1784.0,
       "stop_price": 1618
     },
     {
@@ -27,7 +27,10 @@
       "shares": 20,
       "buy_price": 2865,
       "account": "NISA(成長枠)",
-      "lots": []
+      "lots": [],
+      "highest_price": 3374.0,
+      "current_price": 3374.0,
+      "stop_price": 3066.0
     }
   ],
   "sell_history": []
