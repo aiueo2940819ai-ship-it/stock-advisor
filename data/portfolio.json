@@ -1,26 +1,8 @@
 {
-  "cash_jpy": 406639,
+  "cash_jpy": 461074,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
-    {
-      "code": "8306",
-      "name": "三菱UFJフィナンシャル",
-      "shares": 19,
-      "buy_price": 2865,
-      "highest_price": 3272,
-      "stop_price": 2951,
-      "lots": [
-        {
-          "id": "1781716994643cuu2",
-          "date": "",
-          "shares": 20,
-          "price": 2865
-        }
-      ],
-      "account": "NISA(成長枠)",
-      "current_price": 3272
-    },
     {
       "code": "3407",
       "name": "旭化成",
