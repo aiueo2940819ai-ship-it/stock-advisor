@@ -25,6 +25,43 @@ def load_universe() -> list[dict]:
         return json.load(f)
 
 
+def _performance_summary(portfolio: dict) -> str:
+    """sell_historyから先月の勝率・期待値を集計して文字列で返す"""
+    sells = portfolio.get("sell_history", [])
+    if not sells:
+        return ""
+
+    last_month = (datetime.now().replace(day=1) - __import__('datetime').timedelta(days=1)).strftime("%Y-%m")
+    month_sells = [s for s in sells if s.get("date", "").startswith(last_month)]
+    all_sells   = [s for s in sells if s.get("realized_pnl") is not None]
+
+    lines = ["\n## 先月の実績（sell_historyより自動集計）"]
+
+    for label, data in [("先月", month_sells), ("累計", all_sells)]:
+        if not data:
+            lines.append(f"{label}: データなし")
+            continue
+        wins   = [s for s in data if s["realized_pnl"] > 0]
+        losses = [s for s in data if s["realized_pnl"] < 0]
+        rate   = round(len(wins) / len(data) * 100, 1)
+        avg_w  = round(sum(s["realized_pnl"] for s in wins)   / len(wins),   0) if wins   else 0
+        avg_l  = round(sum(s["realized_pnl"] for s in losses) / len(losses), 0) if losses else 0
+        ev     = round(sum(s["realized_pnl"] for s in data)   / len(data),   0)
+        total_w = sum(s["realized_pnl"] for s in wins)
+        total_l = abs(sum(s["realized_pnl"] for s in losses))
+        pf = round(total_w / total_l, 2) if total_l > 0 else float('inf')
+        lines.append(
+            f"{label}: {len(data)}回 勝率{rate}%（{len(wins)}勝{len(losses)}敗）"
+            f" 平均利益+{avg_w:,.0f}円 平均損失{avg_l:,.0f}円 PF={pf} 期待値/回{ev:+,.0f}円"
+        )
+        if data:
+            lines.append("  銘柄別: " + " / ".join(
+                f"{s['code']}({s['realized_pnl']:+,.0f}円)" for s in sorted(data, key=lambda x: x["date"])
+            ))
+
+    return "\n".join(lines)
+
+
 def analyze_rotation(
     universe_data: list[dict],
     current_watchlist: list[dict],
@@ -37,6 +74,7 @@ def analyze_rotation(
     macro_str      = json.dumps(macro_data,        ensure_ascii=False, indent=2)
     current_str    = json.dumps(current_watchlist, ensure_ascii=False, indent=2)
     month_label    = datetime.now().strftime("%Y年%m月")
+    perf_summary   = _performance_summary(portfolio)
 
     # 過去30日の推奨履歴サマリー（月次専用）
     history_summary = ""
@@ -50,7 +88,7 @@ def analyze_rotation(
 
     prompt = f"""あなたは10年以上の経験を持つ日本株スウィングトレードの専門家です。
 今日は{month_label}の第1営業日です。今月のウォッチリスト入れ替えを提案してください。
-{history_summary}
+{perf_summary}{history_summary}
 
 ## 前提
 - 投資スタイル: 1週間〜1ヶ月のスウィングトレード
@@ -107,6 +145,12 @@ def analyze_rotation(
 
 ## 入れ替えの総括
 （今月の方針を3文以内で）
+
+## 先月の自己評価
+先月の実績データをもとに、以下を簡潔に振り返ってください。
+- 勝率・期待値は目標水準（勝率50%以上・PF1.5以上）に達しているか
+- 負けトレードの共通パターン（セクター・エントリータイミング等）
+- 今月のウォッチリスト選定・判断基準への反映点
 """
 
     message = _client.messages.create(

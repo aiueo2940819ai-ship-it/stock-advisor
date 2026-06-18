@@ -100,6 +100,13 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
 .badge-nisa { background: #e8f5e9; color: #2e7d32; }
 
 .hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+/* 勝率カード */
+.winrate-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 4px; }
+.wr-item { background: #f8f9fa; border-radius: 10px; padding: 10px 8px; text-align: center; }
+.wr-label { font-size: 10px; color: #888; margin-bottom: 4px; }
+.wr-value { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.wr-sub   { font-size: 10px; color: #aaa; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -141,6 +148,38 @@ details[open] > .month-summary .arrow { transform: rotate(90deg); }
       <div class="summary-item">
         <div class="summary-label">今週の損益</div>
         <div class="summary-value zero" id="sWeekPnl">―</div>
+      </div>
+    </div>
+
+    <!-- 勝率・統計 -->
+    <div class="card" id="winrateCard" style="display:none">
+      <h2>🎯 勝率・トレード統計</h2>
+      <div class="winrate-grid">
+        <div class="wr-item">
+          <div class="wr-label">勝率</div>
+          <div class="wr-value" id="wrRate">―</div>
+          <div class="wr-sub" id="wrRecord">―</div>
+        </div>
+        <div class="wr-item">
+          <div class="wr-label">PF</div>
+          <div class="wr-value" id="wrPF">―</div>
+          <div class="wr-sub">プロフィットファクター</div>
+        </div>
+        <div class="wr-item">
+          <div class="wr-label">期待値/回</div>
+          <div class="wr-value" id="wrEV">―</div>
+          <div class="wr-sub">税引前</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="wr-item">
+          <div class="wr-label">平均利益</div>
+          <div class="wr-value plus" id="wrAvgWin">―</div>
+        </div>
+        <div class="wr-item">
+          <div class="wr-label">平均損失</div>
+          <div class="wr-value minus" id="wrAvgLoss">―</div>
+        </div>
       </div>
     </div>
 
@@ -382,10 +421,37 @@ function renderHistory() {
   document.getElementById('historyContainer').innerHTML = html;
 }
 
+function renderWinRate() {
+  const data = sells().filter(t => t.realized_pnl != null);
+  const card = document.getElementById('winrateCard');
+  if (data.length === 0) { card.style.display = 'none'; return; }
+
+  const wins   = data.filter(t => t.realized_pnl > 0);
+  const losses = data.filter(t => t.realized_pnl < 0);
+  const rate   = Math.round(wins.length / data.length * 100);
+  const avgWin  = wins.length  ? Math.round(wins.reduce((s,t)=>s+t.realized_pnl,0) / wins.length)   : 0;
+  const avgLoss = losses.length ? Math.round(losses.reduce((s,t)=>s+t.realized_pnl,0) / losses.length) : 0;
+  const totalWin  = wins.reduce((s,t)=>s+t.realized_pnl, 0);
+  const totalLoss = Math.abs(losses.reduce((s,t)=>s+t.realized_pnl, 0));
+  const pf = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : '∞';
+  const ev = Math.round(data.reduce((s,t)=>s+t.realized_pnl,0) / data.length);
+
+  document.getElementById('wrRate').textContent   = rate + '%';
+  document.getElementById('wrRecord').textContent = `${wins.length}勝${losses.length}敗（${data.length}回）`;
+  document.getElementById('wrPF').textContent     = pf;
+  document.getElementById('wrPF').className       = 'wr-value ' + (parseFloat(pf) >= 1 ? 'plus' : 'minus');
+  document.getElementById('wrEV').textContent     = (ev >= 0 ? '+' : '') + ev.toLocaleString('ja-JP') + '円';
+  document.getElementById('wrEV').className       = 'wr-value ' + (ev >= 0 ? 'plus' : 'minus');
+  document.getElementById('wrAvgWin').textContent  = avgWin  ? '+' + avgWin.toLocaleString('ja-JP') + '円' : '―';
+  document.getElementById('wrAvgLoss').textContent = avgLoss ? avgLoss.toLocaleString('ja-JP') + '円' : '―';
+  card.style.display = 'block';
+}
+
 function renderAll() {
   const s = calcSummary();
   const setSV = (id, v) => { const el=document.getElementById(id); el.textContent=fmt(v); el.className='summary-value '+cls(v); };
   setSV('sTotalPnl', s.total); setSV('sTotalAfterTax', s.tat); setSV('sMonthPnl', s.mo); setSV('sWeekPnl', s.wk);
+  renderWinRate();
   renderChart();
   renderHistory();
 }
