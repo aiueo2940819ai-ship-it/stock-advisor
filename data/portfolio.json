@@ -1,5 +1,5 @@
 {
-  "cash_jpy": 403739,
+  "cash_jpy": 331979,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
@@ -18,7 +18,7 @@
       ],
       "account": "NISA(成長枠)",
       "highest_price": 1790,
-      "current_price": 1784.0,
+      "current_price": 1784,
       "stop_price": 1618
     },
     {
@@ -28,9 +28,24 @@
       "buy_price": 2865,
       "account": "NISA(成長枠)",
       "lots": [],
-      "highest_price": 3374.0,
-      "current_price": 3374.0,
-      "stop_price": 3066.0
+      "highest_price": 3374,
+      "current_price": 3374,
+      "stop_price": 3066
+    },
+    {
+      "code": "3436",
+      "name": "SUMCO",
+      "shares": 16,
+      "buy_price": 4485,
+      "account": "NISA(成長枠)",
+      "lots": [
+        {
+          "id": "1781828549892k1a4",
+          "date": "2026-06-19",
+          "shares": 16,
+          "price": 4485
+        }
+      ]
     }
   ],
   "sell_history": []
