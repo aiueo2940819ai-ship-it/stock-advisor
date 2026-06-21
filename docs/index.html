@@ -139,6 +139,12 @@ input:disabled { color: #999; background: #f5f5f5; }
       <div id="holdingsList"></div>
       <button class="btn btn-blue" onclick="openAddModal()">＋ 銘柄を追加</button>
     </div>
+
+    <div class="card" id="pendingCard">
+      <h2>📋 保留中注文</h2>
+      <div id="pendingList" style="margin-bottom:8px"></div>
+      <button class="btn btn-blue" onclick="openPendingModal()">＋ 発注済み注文を記録</button>
+    </div>
   </div>
 
   <div class="spinner" id="spinner" style="display:none">読み込み中...</div>
@@ -303,15 +309,66 @@ input:disabled { color: #999; background: #f5f5f5; }
   </div>
 </div>
 
+<!-- 保留中注文 追加モーダル -->
+<div class="modal-overlay" id="pendingOverlay" onclick="onPendingOverlay(event)">
+  <div class="modal">
+    <h3>発注済み注文を記録</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">メールの注文内容を見て発注した後、ここに記録しておくと翌朝のAIに伝わります。</p>
+    <div class="field">
+      <label>発注日</label>
+      <input type="date" id="poDate">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>銘柄コード</label>
+        <input type="text" id="poCode" placeholder="7203">
+      </div>
+      <div class="field">
+        <label>銘柄名</label>
+        <input type="text" id="poName" placeholder="トヨタ自動車">
+      </div>
+    </div>
+    <div class="field">
+      <label>注文種別</label>
+      <select id="poOrderType">
+        <option value="指値買い">指値買い</option>
+        <option value="成行買い">成行買い</option>
+        <option value="指値売り">指値売り</option>
+        <option value="成行売り">成行売り</option>
+      </select>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>指値価格（円）</label>
+        <input type="number" id="poPrice" placeholder="2975">
+      </div>
+      <div class="field">
+        <label>株数</label>
+        <input type="number" id="poShares" placeholder="100">
+      </div>
+    </div>
+    <div class="field">
+      <label>有効期限</label>
+      <input type="date" id="poExpires">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="confirmAddPending()">記録する</button>
+      <button class="btn-cancel" onclick="closePendingModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const OWNER = 'aiueo2940819ai-ship-it';
-const REPO  = 'stock-advisor';
-const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/portfolio.json`;
+const OWNER        = 'aiueo2940819ai-ship-it';
+const REPO         = 'stock-advisor';
+const API          = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/portfolio.json`;
+const SNAPSHOT_API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/watchlist_snapshot.json`;
 const TAX   = 0.20315;
 const NISA  = ['NISA(成長枠)'];
 
 let fileSha      = null;
 let portfolio    = null;
+let snapshotData = null;
 let sellCode     = null;
 let addMode      = 'new';  // 'new' | 'more'
 
@@ -344,8 +401,9 @@ async function init() {
     if (!res.ok) throw new Error(data.message || 'API エラー');
     fileSha   = data.sha;
     portfolio = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
-    // 初期化: sell_history がなければ作成
-    if (!portfolio.sell_history) portfolio.sell_history = [];
+    // 初期化: 存在しないキーを補完
+    if (!portfolio.sell_history)   portfolio.sell_history   = [];
+    if (!portfolio.pending_orders) portfolio.pending_orders = [];
     // 後方互換: lots がない holding にダミー lot を付与
     for (const h of (portfolio.holdings || [])) {
       if (!h.lots) {
@@ -355,6 +413,14 @@ async function init() {
       }
       if (!h.account) h.account = '特定口座';
     }
+    // ウォッチリストスナップショット取得（買い時テクニカル自動記録用）
+    try {
+      const sres = await fetch(SNAPSHOT_API, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+      if (sres.ok) {
+        const sdata = await sres.json();
+        snapshotData = JSON.parse(decodeURIComponent(escape(atob(sdata.content.replace(/\n/g,'')))));
+      }
+    } catch(e) { /* スナップショット未取得でも問題なし */ }
     renderForm();
     document.getElementById('spinner').style.display     = 'none';
     document.getElementById('mainContent').style.display = 'block';
@@ -371,6 +437,7 @@ function uid() { return String(Date.now()) + Math.random().toString(36).slice(2,
 function renderForm() {
   document.getElementById('cashJpy').value = portfolio.cash_jpy || 0;
   renderHoldings();
+  renderPendingOrders();
   updateTotal();
 }
 
@@ -486,7 +553,14 @@ function confirmAdd() {
   const acnt   = document.getElementById('mAccount').value;
   if (!code || !shares || !price) { alert('コード・株数・単価は必須です'); return; }
 
-  const lot = { id: uid(), date, shares, price };
+  const snap = (snapshotData?.stocks || {})[code] || {};
+  const lot = {
+    id: uid(), date, shares, price,
+    entry_rsi:       snap.rsi14     ?? null,
+    entry_ma25:      snap.ma25      ?? null,
+    entry_ma75:      snap.ma75      ?? null,
+    entry_vol_ratio: snap.vol_ratio ?? null,
+  };
 
   if (addMode === 'new') {
     if ((portfolio.holdings||[]).find(h=>h.code===code)) {
@@ -768,6 +842,78 @@ async function savePortfolio(mode = 'manual') {
 
 function today() { return new Date().toISOString().slice(0,10); }
 function fmtPnl(v) { return (v>=0?'+':'') + Math.round(v).toLocaleString('ja-JP') + '円'; }
+
+// ── 保留中注文 ─────────────────────────────────────────────────────────────────
+function renderPendingOrders() {
+  const orders = portfolio.pending_orders || [];
+  const list   = document.getElementById('pendingList');
+  if (orders.length === 0) {
+    list.innerHTML = '<div style="font-size:13px;color:#aaa;padding:4px 0">発注済み注文なし</div>';
+    return;
+  }
+  list.innerHTML = orders.map(o => `
+    <div style="background:#f8f9fa;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <b>${o.code} ${o.name}</b>
+          <span style="margin-left:8px;color:${o.order_type.includes('買')? '#1565C0':'#b71c1c'};font-weight:600">${o.order_type}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="deletePendingOrder('${o.id}')" style="font-size:11px;padding:3px 8px;border:none;border-radius:6px;background:#ffebee;color:#c62828;cursor:pointer">✗ 取消</button>
+          <button onclick="fillPendingOrder('${o.id}')" style="font-size:11px;padding:3px 8px;border:none;border-radius:6px;background:#e8f5e9;color:#2e7d32;cursor:pointer">✓ 約定</button>
+        </div>
+      </div>
+      <div style="margin-top:4px;color:#555">
+        ${o.price ? o.price.toLocaleString('ja-JP') + '円' : '成行'} × ${o.shares}株
+        ／ 発注: ${o.date_ordered} ／ 期限: ${o.expires || '当日'}
+      </div>
+    </div>
+  `).join('');
+}
+
+function openPendingModal() {
+  document.getElementById('poDate').value      = today();
+  document.getElementById('poCode').value      = '';
+  document.getElementById('poName').value      = '';
+  document.getElementById('poPrice').value     = '';
+  document.getElementById('poShares').value    = '';
+  document.getElementById('poExpires').value   = today();
+  document.getElementById('pendingOverlay').classList.add('open');
+}
+function closePendingModal() { document.getElementById('pendingOverlay').classList.remove('open'); }
+function onPendingOverlay(e) { if (e.target===document.getElementById('pendingOverlay')) closePendingModal(); }
+
+function confirmAddPending() {
+  const code      = document.getElementById('poCode').value.trim();
+  const name      = document.getElementById('poName').value.trim() || code;
+  const orderType = document.getElementById('poOrderType').value;
+  const price     = parseFloat(document.getElementById('poPrice').value) || null;
+  const shares    = parseFloat(document.getElementById('poShares').value) || 0;
+  const dateOrd   = document.getElementById('poDate').value;
+  const expires   = document.getElementById('poExpires').value;
+  if (!code || !shares) { alert('銘柄コードと株数は必須です'); return; }
+  portfolio.pending_orders = portfolio.pending_orders || [];
+  portfolio.pending_orders.push({ id: uid(), code, name, order_type: orderType, price, shares, date_ordered: dateOrd, expires });
+  closePendingModal();
+  renderPendingOrders();
+  savePortfolio('auto');
+}
+
+function deletePendingOrder(id) {
+  if (!confirm('この注文記録を削除しますか？')) return;
+  portfolio.pending_orders = (portfolio.pending_orders || []).filter(o => o.id !== id);
+  renderPendingOrders();
+  savePortfolio('auto');
+}
+
+function fillPendingOrder(id) {
+  const o = (portfolio.pending_orders || []).find(x => x.id === id);
+  if (!o) return;
+  if (!confirm(`${o.code} ${o.name} の注文が約定しましたか？\n記録を削除します（保有銘柄への追加は「＋ 銘柄を追加」から行ってください）`)) return;
+  portfolio.pending_orders = (portfolio.pending_orders || []).filter(x => x.id !== id);
+  renderPendingOrders();
+  savePortfolio('auto');
+}
 
 window.onload = init;
 </script>

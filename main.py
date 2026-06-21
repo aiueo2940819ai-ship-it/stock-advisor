@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from pathlib import Path
 
 from src.data.market    import get_macro_data, get_us_sector_signal, get_jp_sector_trend
 from src.data.stocks    import get_stock_data
@@ -62,6 +64,28 @@ def main():
     )
     portfolio["total_asset_jpy"] = portfolio["cash_jpy"] + holdings_now
     print(f"  時価総資産: {portfolio['total_asset_jpy']:,}円")
+
+    # ③-b3 ウォッチリストスナップショット保存（買い時テクニカル記録用）
+    snapshot = {
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "stocks": {
+            d["code"]: {
+                "latest":    d.get("latest"),
+                "rsi14":     d.get("rsi14"),
+                "ma25":      d.get("ma25"),
+                "ma75":      d.get("ma75"),
+                "vol_ratio": d.get("vol_ratio"),
+                "atr14":     d.get("atr14"),
+                "change_5d": d.get("change_5d"),
+            }
+            for d in stock_data_list
+            if "error" not in d
+        },
+    }
+    Path("data/watchlist_snapshot.json").write_text(
+        json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    print("  ウォッチリストスナップショット保存完了")
 
     # ③-c 劇おすすめ広域スクリーニング（ウォッチリスト外の候補を抽出）
     print("\n  劇おすすめ広域スクリーニング中（日経225規模）...")
