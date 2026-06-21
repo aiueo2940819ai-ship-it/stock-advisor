@@ -48,5 +48,6 @@
       ]
     }
   ],
-  "sell_history": []
+  "sell_history": [],
+  "pending_orders": []
 }
