@@ -128,9 +128,8 @@ input:disabled { color: #999; background: #f5f5f5; }
       <h2>💴 現金残高</h2>
       <div class="field">
         <label>現金（円）</label>
-        <input type="number" id="cashJpy" placeholder="500000" oninput="updateTotal()">
+        <input type="number" id="cashJpy" placeholder="500000" oninput="updateTotal()" onblur="savePortfolio('auto')">
       </div>
-      <button class="btn btn-green" onclick="savePortfolio()" style="margin-top:10px">💾 現金残高を保存する</button>
       <div class="status" id="status"></div>
     </div>
 
@@ -221,10 +220,11 @@ input:disabled { color: #999; background: #f5f5f5; }
   </div>
 </div>
 
-<!-- 保有銘柄 編集モーダル -->
+<!-- 保有銘柄 編集モーダル（銘柄名・口座のみ。単価/株数はロット編集から） -->
 <div class="modal-overlay" id="editHoldingOverlay" onclick="onEditHoldingOverlay(event)">
   <div class="modal">
     <h3 id="editHoldingTitle">銘柄情報を編集</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">単価・株数の修正は青チップ（購入ロット）から行ってください。</p>
     <div class="field">
       <label>銘柄コード（変更不可）</label>
       <input type="text" id="ehCode" disabled>
@@ -240,14 +240,6 @@ input:disabled { color: #999; background: #f5f5f5; }
         <option value="NISA(成長枠)">NISA 成長投資枠（非課税）</option>
         <option value="一般口座">一般口座（確定申告 20.315%）</option>
       </select>
-    </div>
-    <div class="field">
-      <label>平均取得単価（円）</label>
-      <input type="number" id="ehPrice" placeholder="2800">
-    </div>
-    <div class="field">
-      <label>保有株数</label>
-      <input type="number" id="ehShares" placeholder="100" min="1">
     </div>
     <div class="modal-btns">
       <button class="btn-save" onclick="confirmEditHolding()">保存</button>
@@ -309,50 +301,74 @@ input:disabled { color: #999; background: #f5f5f5; }
   </div>
 </div>
 
+<!-- 約定確認モーダル -->
+<div class="modal-overlay" id="fillOverlay" onclick="onFillOverlay(event)">
+  <div class="modal">
+    <h3 id="fillTitle">約定を登録</h3>
+    <div class="info-box" id="fillInfo" style="margin-bottom:10px"></div>
+    <div class="grid2">
+      <div class="field">
+        <label>約定日</label>
+        <input type="date" id="fillDate">
+      </div>
+      <div class="field">
+        <label>約定単価（円）</label>
+        <input type="number" id="fillPrice">
+      </div>
+    </div>
+    <div class="field" id="fillAccountField">
+      <label>証券口座</label>
+      <select id="fillAccount">
+        <option value="特定口座">特定口座（源泉 20.315%）</option>
+        <option value="NISA(成長枠)">NISA 成長投資枠（非課税）</option>
+        <option value="一般口座">一般口座（確定申告 20.315%）</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="confirmFillOrder()">登録する</button>
+      <button class="btn-cancel" onclick="closeFillModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <!-- 保留中注文 追加モーダル -->
 <div class="modal-overlay" id="pendingOverlay" onclick="onPendingOverlay(event)">
   <div class="modal">
-    <h3>発注済み注文を記録</h3>
-    <p style="font-size:12px;color:#888;margin-bottom:12px">メールの注文内容を見て発注した後、ここに記録しておくと翌朝のAIに伝わります。</p>
-    <div class="field">
-      <label>発注日</label>
-      <input type="date" id="poDate">
-    </div>
+    <h3>注文を記録</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px">発注後に記録 → 翌朝のAIに伝わります</p>
     <div class="grid2">
       <div class="field">
         <label>銘柄コード</label>
-        <input type="text" id="poCode" placeholder="7203">
+        <input type="text" id="poCode" placeholder="7203" oninput="autoFillPendingName()">
       </div>
       <div class="field">
-        <label>銘柄名</label>
-        <input type="text" id="poName" placeholder="トヨタ自動車">
+        <label>注文種別</label>
+        <select id="poOrderType">
+          <option value="指値買い">指値買い</option>
+          <option value="成行買い">成行買い</option>
+          <option value="指値売り">指値売り</option>
+          <option value="成行売り">成行売り</option>
+        </select>
       </div>
-    </div>
-    <div class="field">
-      <label>注文種別</label>
-      <select id="poOrderType">
-        <option value="指値買い">指値買い</option>
-        <option value="成行買い">成行買い</option>
-        <option value="指値売り">指値売り</option>
-        <option value="成行売り">成行売り</option>
-      </select>
     </div>
     <div class="grid2">
-      <div class="field">
-        <label>指値価格（円）</label>
-        <input type="number" id="poPrice" placeholder="2975">
-      </div>
       <div class="field">
         <label>株数</label>
         <input type="number" id="poShares" placeholder="100">
       </div>
+      <div class="field">
+        <label>指値価格（円）</label>
+        <input type="number" id="poPrice" placeholder="2975">
+      </div>
     </div>
-    <div class="field">
-      <label>有効期限</label>
-      <input type="date" id="poExpires">
+    <div class="field" id="poNameField" style="display:none">
+      <label>銘柄名</label>
+      <input type="text" id="poName" placeholder="トヨタ自動車">
     </div>
+    <input type="hidden" id="poDate">
+    <input type="hidden" id="poExpires">
     <div class="modal-btns">
-      <button class="btn-save" onclick="confirmAddPending()">記録する</button>
+      <button class="btn-save" onclick="confirmAddPending()">記録</button>
       <button class="btn-cancel" onclick="closePendingModal()">キャンセル</button>
     </div>
   </div>
@@ -591,8 +607,6 @@ function openEditHolding(code) {
   document.getElementById('ehCode').value    = h.code;
   document.getElementById('ehName').value    = h.name;
   document.getElementById('ehAccount').value = h.account || '特定口座';
-  document.getElementById('ehPrice').value   = h.buy_price || '';
-  document.getElementById('ehShares').value  = h.shares || '';
   document.getElementById('editHoldingOverlay').classList.add('open');
 }
 
@@ -600,18 +614,14 @@ function closeEditHolding() { document.getElementById('editHoldingOverlay').clas
 function onEditHoldingOverlay(e) { if (e.target===document.getElementById('editHoldingOverlay')) closeEditHolding(); }
 
 function confirmEditHolding() {
-  const code   = document.getElementById('ehCode').value;
-  const h      = (portfolio.holdings||[]).find(x=>x.code===code);
+  const code = document.getElementById('ehCode').value;
+  const h    = (portfolio.holdings||[]).find(x=>x.code===code);
   if (!h) return;
-  const name   = document.getElementById('ehName').value.trim() || h.name;
-  const acnt   = document.getElementById('ehAccount').value;
-  const price  = parseFloat(document.getElementById('ehPrice').value);
-  const shares = parseFloat(document.getElementById('ehShares').value);
+  const name = document.getElementById('ehName').value.trim() || h.name;
+  const acnt = document.getElementById('ehAccount').value;
   if (!name) { alert('銘柄名を入力してください'); return; }
   h.name    = name;
   h.account = acnt;
-  if (!isNaN(price)  && price > 0)  h.buy_price = price;
-  if (!isNaN(shares) && shares > 0) h.shares    = shares;
   closeEditHolding();
   renderHoldings(); updateTotal();
   savePortfolio('auto');
@@ -786,6 +796,7 @@ function confirmSell() {
   const isNisa = NISA.includes(h.account);
   const pnlAft = isNisa ? pnl : Math.round(pnl*(1-TAX));
 
+  const sellSnap = (snapshotData?.stocks || {})[h.code] || {};
   portfolio.sell_history = portfolio.sell_history || [];
   portfolio.sell_history.push({
     id: uid(), date,
@@ -795,6 +806,10 @@ function confirmSell() {
     account: h.account,
     realized_pnl: pnl,
     realized_pnl_after_tax: pnlAft,
+    exit_rsi:       sellSnap.rsi14     ?? null,
+    exit_ma25:      sellSnap.ma25      ?? null,
+    exit_ma75:      sellSnap.ma75      ?? null,
+    exit_vol_ratio: sellSnap.vol_ratio ?? null,
     memo: '',
   });
 
@@ -845,43 +860,62 @@ function fmtPnl(v) { return (v>=0?'+':'') + Math.round(v).toLocaleString('ja-JP'
 
 // ── 保留中注文 ─────────────────────────────────────────────────────────────────
 function renderPendingOrders() {
-  const orders = portfolio.pending_orders || [];
-  const list   = document.getElementById('pendingList');
+  const orders  = portfolio.pending_orders || [];
+  const list    = document.getElementById('pendingList');
+  const todayStr = today();
   if (orders.length === 0) {
     list.innerHTML = '<div style="font-size:13px;color:#aaa;padding:4px 0">発注済み注文なし</div>';
     return;
   }
-  list.innerHTML = orders.map(o => `
-    <div style="background:#f8f9fa;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px">
+  list.innerHTML = orders.map(o => {
+    const expired  = o.expires && o.expires < todayStr;
+    const isBuy    = o.order_type.includes('買');
+    const typeColor = isBuy ? '#1565C0' : '#b71c1c';
+    const bg       = expired ? '#f0f0f0' : '#f8f9fa';
+    const opacity  = expired ? '0.55' : '1';
+    return `
+    <div style="background:${bg};border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px;opacity:${opacity}">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <b>${o.code} ${o.name}</b>
-          <span style="margin-left:8px;color:${o.order_type.includes('買')? '#1565C0':'#b71c1c'};font-weight:600">${o.order_type}</span>
+          <b>${o.code} ${o.name||''}</b>
+          <span style="margin-left:8px;color:${typeColor};font-weight:600">${o.order_type}</span>
+          ${expired ? '<span style="margin-left:6px;font-size:10px;color:#999">期限切れ</span>' : ''}
         </div>
         <div style="display:flex;gap:6px">
           <button onclick="deletePendingOrder('${o.id}')" style="font-size:11px;padding:3px 8px;border:none;border-radius:6px;background:#ffebee;color:#c62828;cursor:pointer">✗ 取消</button>
-          <button onclick="fillPendingOrder('${o.id}')" style="font-size:11px;padding:3px 8px;border:none;border-radius:6px;background:#e8f5e9;color:#2e7d32;cursor:pointer">✓ 約定</button>
+          ${!expired ? `<button onclick="fillPendingOrder('${o.id}')" style="font-size:11px;padding:3px 8px;border:none;border-radius:6px;background:#e8f5e9;color:#2e7d32;cursor:pointer">✓ 約定</button>` : ''}
         </div>
       </div>
-      <div style="margin-top:4px;color:#555">
+      <div style="margin-top:4px;color:#666">
         ${o.price ? o.price.toLocaleString('ja-JP') + '円' : '成行'} × ${o.shares}株
-        ／ 発注: ${o.date_ordered} ／ 期限: ${o.expires || '当日'}
+        ／ 期限: ${o.expires || '当日'}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function openPendingModal() {
-  document.getElementById('poDate').value      = today();
-  document.getElementById('poCode').value      = '';
-  document.getElementById('poName').value      = '';
-  document.getElementById('poPrice').value     = '';
-  document.getElementById('poShares').value    = '';
-  document.getElementById('poExpires').value   = today();
+  document.getElementById('poDate').value    = today();
+  document.getElementById('poExpires').value = today();
+  document.getElementById('poCode').value    = '';
+  document.getElementById('poName').value    = '';
+  document.getElementById('poPrice').value   = '';
+  document.getElementById('poShares').value  = '';
+  document.getElementById('poNameField').style.display = 'none';
   document.getElementById('pendingOverlay').classList.add('open');
 }
 function closePendingModal() { document.getElementById('pendingOverlay').classList.remove('open'); }
 function onPendingOverlay(e) { if (e.target===document.getElementById('pendingOverlay')) closePendingModal(); }
+
+function autoFillPendingName() {
+  const code = document.getElementById('poCode').value.trim();
+  if (!code) { document.getElementById('poNameField').style.display='none'; return; }
+  const h = (portfolio.holdings||[]).find(x=>x.code===code);
+  const w = (portfolio.watch_list||[]).find(x=>x.code===code);
+  const name = h?.name || w?.name || '';
+  document.getElementById('poName').value = name;
+  document.getElementById('poNameField').style.display = '';
+}
 
 function confirmAddPending() {
   const code      = document.getElementById('poCode').value.trim();
@@ -889,8 +923,8 @@ function confirmAddPending() {
   const orderType = document.getElementById('poOrderType').value;
   const price     = parseFloat(document.getElementById('poPrice').value) || null;
   const shares    = parseFloat(document.getElementById('poShares').value) || 0;
-  const dateOrd   = document.getElementById('poDate').value;
-  const expires   = document.getElementById('poExpires').value;
+  const dateOrd   = document.getElementById('poDate').value || today();
+  const expires   = document.getElementById('poExpires').value || today();
   if (!code || !shares) { alert('銘柄コードと株数は必須です'); return; }
   portfolio.pending_orders = portfolio.pending_orders || [];
   portfolio.pending_orders.push({ id: uid(), code, name, order_type: orderType, price, shares, date_ordered: dateOrd, expires });
@@ -906,12 +940,74 @@ function deletePendingOrder(id) {
   savePortfolio('auto');
 }
 
+let fillOrderId = null;
+
 function fillPendingOrder(id) {
   const o = (portfolio.pending_orders || []).find(x => x.id === id);
   if (!o) return;
-  if (!confirm(`${o.code} ${o.name} の注文が約定しましたか？\n記録を削除します（保有銘柄への追加は「＋ 銘柄を追加」から行ってください）`)) return;
-  portfolio.pending_orders = (portfolio.pending_orders || []).filter(x => x.id !== id);
-  renderPendingOrders();
+  fillOrderId = id;
+  const isBuy = o.order_type.includes('買');
+  document.getElementById('fillTitle').textContent = `約定登録: ${o.code} ${o.name||''}`;
+  document.getElementById('fillInfo').innerHTML =
+    `<b>${o.order_type}</b> / ${o.shares}株 / 指値: ${o.price ? o.price.toLocaleString('ja-JP')+'円' : '成行'}`;
+  document.getElementById('fillDate').value  = today();
+  document.getElementById('fillPrice').value = o.price || '';
+  document.getElementById('fillAccountField').style.display = isBuy ? '' : 'none';
+  document.getElementById('fillOverlay').classList.add('open');
+}
+function closeFillModal() { document.getElementById('fillOverlay').classList.remove('open'); fillOrderId = null; }
+function onFillOverlay(e) { if (e.target===document.getElementById('fillOverlay')) closeFillModal(); }
+
+function confirmFillOrder() {
+  const o = (portfolio.pending_orders || []).find(x => x.id === fillOrderId);
+  if (!o) return;
+  const date  = document.getElementById('fillDate').value;
+  const price = parseFloat(document.getElementById('fillPrice').value) || 0;
+  const acnt  = document.getElementById('fillAccount').value;
+  if (!date || !price) { alert('日付と約定単価は必須です'); return; }
+
+  const isBuy = o.order_type.includes('買');
+  if (isBuy) {
+    const snap = (snapshotData?.stocks || {})[o.code] || {};
+    const lot  = {
+      id: uid(), date, shares: o.shares, price,
+      entry_rsi: snap.rsi14 ?? null, entry_ma25: snap.ma25 ?? null,
+      entry_ma75: snap.ma75 ?? null, entry_vol_ratio: snap.vol_ratio ?? null,
+    };
+    const existing = (portfolio.holdings||[]).find(x=>x.code===o.code);
+    if (existing) {
+      const ns = existing.shares + o.shares;
+      existing.buy_price = Math.round(((existing.buy_price * existing.shares) + (price * o.shares)) / ns);
+      existing.shares    = ns;
+      existing.lots      = [...(existing.lots||[]), lot];
+    } else {
+      portfolio.holdings = portfolio.holdings || [];
+      portfolio.holdings.push({ code: o.code, name: o.name||o.code, shares: o.shares, buy_price: price, account: acnt, lots: [lot] });
+    }
+    portfolio.cash_jpy = (portfolio.cash_jpy || 0) - o.shares * price;
+  } else {
+    const h = (portfolio.holdings||[]).find(x=>x.code===o.code);
+    if (!h) { alert(`${o.code} は保有銘柄にありません`); return; }
+    const snap   = (snapshotData?.stocks || {})[o.code] || {};
+    const pnl    = Math.round((price - h.buy_price) * o.shares);
+    const isNisa = NISA.includes(h.account);
+    portfolio.sell_history = portfolio.sell_history || [];
+    portfolio.sell_history.push({
+      id: uid(), date, code: h.code, name: h.name,
+      shares: o.shares, sell_price: price, avg_buy_price: h.buy_price, account: h.account,
+      realized_pnl: pnl, realized_pnl_after_tax: isNisa ? pnl : Math.round(pnl*(1-TAX)),
+      exit_rsi: snap.rsi14 ?? null, exit_ma25: snap.ma25 ?? null,
+      exit_ma75: snap.ma75 ?? null, exit_vol_ratio: snap.vol_ratio ?? null,
+      memo: '',
+    });
+    h.shares -= o.shares;
+    if (h.shares <= 0) portfolio.holdings = portfolio.holdings.filter(x=>x.code!==o.code);
+    portfolio.cash_jpy = (portfolio.cash_jpy || 0) + o.shares * price;
+  }
+
+  portfolio.pending_orders = (portfolio.pending_orders || []).filter(x => x.id !== fillOrderId);
+  closeFillModal();
+  renderHoldings(); renderPendingOrders(); updateCashDisplay();
   savePortfolio('auto');
 }
 
