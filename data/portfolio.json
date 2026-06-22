@@ -52,16 +52,5 @@
     }
   ],
   "sell_history": [],
-  "pending_orders": [
-    {
-      "id": "1782089426332atcy",
-      "code": "6503",
-      "name": "三菱電機",
-      "order_type": "指値買い",
-      "price": 6038,
-      "shares": 11,
-      "date_ordered": "2026-06-22",
-      "expires": "2026-06-22"
-    }
-  ]
+  "pending_orders": []
 }
