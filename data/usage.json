@@ -238,5 +238,25 @@
     "input_tokens": 4873,
     "output_tokens": 592,
     "cost_usd": 0.006266
+  },
+  {
+    "date": "2026-07-01",
+    "time": "23:15",
+    "task": "morning",
+    "task_label": "朝の分析",
+    "model": "claude-opus-4-8",
+    "input_tokens": 16556,
+    "output_tokens": 5073,
+    "cost_usd": 0.209605
+  },
+  {
+    "date": "2026-07-01",
+    "time": "23:15",
+    "task": "rotation",
+    "task_label": "月次ローテーション",
+    "model": "claude-haiku-4-5-20251001",
+    "input_tokens": 21113,
+    "output_tokens": 2000,
+    "cost_usd": 0.02489
   }
 ]
