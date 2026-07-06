@@ -1,5 +1,5 @@
 {
-  "cash_jpy": 396747,
+  "cash_jpy": 171347,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
@@ -31,6 +31,25 @@
       "highest_price": 3374,
       "current_price": 3326,
       "stop_price": 3066
+    },
+    {
+      "code": "4543",
+      "name": "テルモ",
+      "shares": 100,
+      "buy_price": 2254,
+      "account": "特定口座",
+      "lots": [
+        {
+          "id": "1783296694508p2pb",
+          "date": "2026-07-06",
+          "shares": 100,
+          "price": 2254,
+          "entry_rsi": null,
+          "entry_ma25": null,
+          "entry_ma75": null,
+          "entry_vol_ratio": null
+        }
+      ]
     }
   ],
   "sell_history": [
@@ -52,16 +71,5 @@
       "memo": ""
     }
   ],
-  "pending_orders": [
-    {
-      "id": "1783296674031efen",
-      "code": "4543",
-      "name": "テルモ",
-      "order_type": "指値買い",
-      "price": 2254,
-      "shares": 100,
-      "date_ordered": "2026-07-06",
-      "expires": "2026-07-06"
-    }
-  ]
+  "pending_orders": []
 }
