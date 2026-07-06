@@ -17,8 +17,8 @@
         }
       ],
       "account": "NISA(成長枠)",
-      "highest_price": 1849,
-      "current_price": 1849,
+      "highest_price": 1901.0,
+      "current_price": 1901.0,
       "stop_price": 1618
     },
     {
@@ -29,7 +29,7 @@
       "account": "NISA(成長枠)",
       "lots": [],
       "highest_price": 3374,
-      "current_price": 3326,
+      "current_price": 3370.0,
       "stop_price": 3066
     },
     {
@@ -49,7 +49,10 @@
           "entry_ma75": null,
           "entry_vol_ratio": null
         }
-      ]
+      ],
+      "highest_price": 2293.5,
+      "current_price": 2294.0,
+      "stop_price": 2090.0
     }
   ],
   "sell_history": [
