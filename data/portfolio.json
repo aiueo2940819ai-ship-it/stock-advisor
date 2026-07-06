@@ -1,5 +1,5 @@
 {
-  "cash_jpy": 396747,
+  "cash_jpy": 171347,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
@@ -17,8 +17,8 @@
         }
       ],
       "account": "NISA(成長枠)",
-      "highest_price": 1849.0,
-      "current_price": 1849.0,
+      "highest_price": 1849,
+      "current_price": 1849,
       "stop_price": 1618
     },
     {
@@ -29,8 +29,27 @@
       "account": "NISA(成長枠)",
       "lots": [],
       "highest_price": 3374,
-      "current_price": 3326.0,
+      "current_price": 3326,
       "stop_price": 3066
+    },
+    {
+      "code": "4543",
+      "name": "テルモ",
+      "shares": 100,
+      "buy_price": 2254,
+      "account": "NISA(成長枠)",
+      "lots": [
+        {
+          "id": "17832966436821sej",
+          "date": "2026-07-06",
+          "shares": 100,
+          "price": 2254,
+          "entry_rsi": null,
+          "entry_ma25": null,
+          "entry_ma75": null,
+          "entry_vol_ratio": null
+        }
+      ]
     }
   ],
   "sell_history": [
