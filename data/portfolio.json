@@ -1,5 +1,5 @@
 {
-  "cash_jpy": 171347,
+  "cash_jpy": 241347,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
@@ -17,20 +17,9 @@
         }
       ],
       "account": "NISA(成長枠)",
-      "highest_price": 1901.0,
-      "current_price": 1901.0,
+      "highest_price": 1901,
+      "current_price": 1901,
       "stop_price": 1618
-    },
-    {
-      "code": "8306",
-      "name": "三菱UFJ",
-      "shares": 20,
-      "buy_price": 2865,
-      "account": "NISA(成長枠)",
-      "lots": [],
-      "highest_price": 3374,
-      "current_price": 3370.0,
-      "stop_price": 3066
     },
     {
       "code": "4543",
@@ -51,8 +40,8 @@
         }
       ],
       "highest_price": 2293.5,
-      "current_price": 2294.0,
-      "stop_price": 2090.0
+      "current_price": 2294,
+      "stop_price": 2090
     }
   ],
   "sell_history": [
@@ -71,6 +60,23 @@
       "exit_ma25": 3754.3,
       "exit_ma75": 2677,
       "exit_vol_ratio": 0.68,
+      "memo": ""
+    },
+    {
+      "id": "1783384591010a1z8",
+      "date": "2026-07-07",
+      "code": "8306",
+      "name": "三菱UFJ",
+      "shares": 20,
+      "sell_price": 3500,
+      "avg_buy_price": 2865,
+      "account": "NISA(成長枠)",
+      "realized_pnl": 12700,
+      "realized_pnl_after_tax": 12700,
+      "exit_rsi": 60.7,
+      "exit_ma25": 3230,
+      "exit_ma75": 2970.7,
+      "exit_vol_ratio": 0.59,
       "memo": ""
     }
   ],
