@@ -388,5 +388,15 @@
     "input_tokens": 4872,
     "output_tokens": 601,
     "cost_usd": 0.006302
+  },
+  {
+    "date": "2026-07-12",
+    "time": "22:46",
+    "task": "morning",
+    "task_label": "朝の分析",
+    "model": "claude-opus-4-8",
+    "input_tokens": 16985,
+    "output_tokens": 5999,
+    "cost_usd": 0.2349
   }
 ]
