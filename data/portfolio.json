@@ -1,26 +1,8 @@
 {
-  "cash_jpy": 241347,
+  "cash_jpy": 332947,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
   "holdings": [
-    {
-      "code": "3407",
-      "name": "旭化成",
-      "shares": 50,
-      "buy_price": 1755,
-      "lots": [
-        {
-          "id": "1781716994643usug",
-          "date": "",
-          "shares": 50,
-          "price": 1755
-        }
-      ],
-      "account": "NISA(成長枠)",
-      "highest_price": 1901,
-      "current_price": 1816.0,
-      "stop_price": 1618
-    },
     {
       "code": "4543",
       "name": "テルモ",
@@ -39,8 +21,8 @@
           "entry_vol_ratio": null
         }
       ],
-      "highest_price": 2324.0,
-      "current_price": 2214.0,
+      "highest_price": 2324,
+      "current_price": 2214,
       "stop_price": 2090
     }
   ],
@@ -77,6 +59,23 @@
       "exit_ma25": 3230,
       "exit_ma75": 2970.7,
       "exit_vol_ratio": 0.59,
+      "memo": ""
+    },
+    {
+      "id": "17840050405931e6y",
+      "date": "2026-07-14",
+      "code": "3407",
+      "name": "旭化成",
+      "shares": 50,
+      "sell_price": 1832,
+      "avg_buy_price": 1755,
+      "account": "NISA(成長枠)",
+      "realized_pnl": 3850,
+      "realized_pnl_after_tax": 3850,
+      "exit_rsi": 54.7,
+      "exit_ma25": 1803.2,
+      "exit_ma75": 1687.4,
+      "exit_vol_ratio": 0.69,
       "memo": ""
     }
   ],
