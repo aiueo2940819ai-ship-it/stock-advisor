@@ -1,45 +1,5 @@
 [
   {
-    "date": "2026-06-17",
-    "time": "11:56",
-    "task": "morning",
-    "task_label": "朝の分析",
-    "model": "claude-sonnet-4-6",
-    "input_tokens": 14670,
-    "output_tokens": 3000,
-    "cost_usd": 0.08901
-  },
-  {
-    "date": "2026-06-17",
-    "time": "12:23",
-    "task": "morning",
-    "task_label": "朝の分析",
-    "model": "claude-opus-4-8",
-    "input_tokens": 14181,
-    "output_tokens": 2928,
-    "cost_usd": 0
-  },
-  {
-    "date": "2026-06-17",
-    "time": "17:58",
-    "task": "morning",
-    "task_label": "朝の分析",
-    "model": "claude-opus-4-8",
-    "input_tokens": 14366,
-    "output_tokens": 5177,
-    "cost_usd": 0
-  },
-  {
-    "date": "2026-06-17",
-    "time": "23:23",
-    "task": "morning",
-    "task_label": "朝の分析",
-    "model": "claude-opus-4-8",
-    "input_tokens": 14305,
-    "output_tokens": 2708,
-    "cost_usd": 0.139225
-  },
-  {
     "date": "2026-06-18",
     "time": "14:24",
     "task": "evening",
@@ -468,5 +428,15 @@
     "input_tokens": 16451,
     "output_tokens": 5617,
     "cost_usd": 0.22268
+  },
+  {
+    "date": "2026-07-17",
+    "time": "08:33",
+    "task": "evening",
+    "task_label": "夕方サマリー",
+    "model": "claude-haiku-4-5-20251001",
+    "input_tokens": 4748,
+    "output_tokens": 521,
+    "cost_usd": 0.005882
   }
 ]
