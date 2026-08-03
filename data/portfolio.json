@@ -1,8 +1,28 @@
 {
-  "cash_jpy": 572947,
+  "cash_jpy": 399747,
   "max_single_stock_ratio": 0.15,
   "stop_loss_ratio": -0.08,
-  "holdings": [],
+  "holdings": [
+    {
+      "code": "9005",
+      "name": "東急",
+      "shares": 100,
+      "buy_price": 1732,
+      "account": "NISA(成長枠)",
+      "lots": [
+        {
+          "id": "1785796458307z6jh",
+          "date": "2026-08-03",
+          "shares": 100,
+          "price": 1732,
+          "entry_rsi": null,
+          "entry_ma25": null,
+          "entry_ma75": null,
+          "entry_vol_ratio": null
+        }
+      ]
+    }
+  ],
   "sell_history": [
     {
       "id": "1782174859955exab",
