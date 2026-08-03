@@ -20,7 +20,10 @@
           "entry_ma75": null,
           "entry_vol_ratio": null
         }
-      ]
+      ],
+      "highest_price": 1747.0,
+      "current_price": 1747.0,
+      "stop_price": 1636.0
     }
   ],
   "sell_history": [
