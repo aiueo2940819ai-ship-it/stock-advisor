@@ -1,25 +1,5 @@
 [
   {
-    "date": "2026-07-20",
-    "time": "09:41",
-    "task": "evening",
-    "task_label": "夕方サマリー",
-    "model": "claude-haiku-4-5-20251001",
-    "input_tokens": 4749,
-    "output_tokens": 520,
-    "cost_usd": 0.005879
-  },
-  {
-    "date": "2026-07-20",
-    "time": "22:59",
-    "task": "morning",
-    "task_label": "朝の分析",
-    "model": "claude-opus-4-8",
-    "input_tokens": 16950,
-    "output_tokens": 2669,
-    "cost_usd": 0.151475
-  },
-  {
     "date": "2026-07-21",
     "time": "09:08",
     "task": "evening",
@@ -428,5 +408,15 @@
     "input_tokens": 16607,
     "output_tokens": 5200,
     "cost_usd": 0.213035
+  },
+  {
+    "date": "2026-08-19",
+    "time": "07:14",
+    "task": "evening",
+    "task_label": "夕方サマリー",
+    "model": "claude-haiku-4-5-20251001",
+    "input_tokens": 4739,
+    "output_tokens": 453,
+    "cost_usd": 0.005603
   }
 ]
