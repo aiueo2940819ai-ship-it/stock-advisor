@@ -88,5 +88,15 @@
     "input_tokens": 15208,
     "output_tokens": 2012,
     "cost_usd": 0.12634
+  },
+  {
+    "date": "2026-10-14",
+    "time": "12:13",
+    "task": "evening",
+    "task_label": "夕方サマリー",
+    "model": "claude-haiku-4-5-20251001",
+    "input_tokens": 4746,
+    "output_tokens": 586,
+    "cost_usd": 0.006141
   }
 ]
