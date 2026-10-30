@@ -318,5 +318,15 @@
     "input_tokens": 4739,
     "output_tokens": 551,
     "cost_usd": 0.005995
+  },
+  {
+    "date": "2026-10-30",
+    "time": "01:32",
+    "task": "morning",
+    "task_label": "朝の分析",
+    "model": "claude-opus-4-8",
+    "input_tokens": 15256,
+    "output_tokens": 1964,
+    "cost_usd": 0.12538
   }
 ]
